@@ -67,6 +67,24 @@ struct WidgetNameCompare:public std::binary_function<Widget,Widget,bool>{
 
 bind是STL中的一个适配器
 
+### std::bind`和 std::placeholder
+
+`std::bind` 是用来绑定函数调用的参数的， 它解决的需求是我们有时候可能并不一定能够一次性获得调用某个函数的全部参数，通过这个函数， 我们可以将部分调用参数提前绑定到函数身上成为一个新的对象，然后在参数齐全后，完成调用。 例如：
+
+```
+int foo(int a, int b, int c) {
+    ;
+}
+int main() {
+    // 将参数1,2绑定到函数 foo 上，但是使用 std::placeholders::_1 来对第一个参数进行占位
+    auto bindFoo = std::bind(foo, std::placeholders::_1, 1,2);
+    // 这时调用 bindFoo 时，只需要提供第一个参数即可
+    bindFoo(1);
+}
+```
+
+> **提示：**注意 `auto` 关键字的妙用。有时候我们可能不太熟悉一个函数的返回值类型， 但是我们却可以通过 `auto` 的使用来规避这一问题的出现。
+
 ### bind1st
 
 绑定第一个值，将一个二元操作转换为一元操作。

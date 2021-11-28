@@ -1,5 +1,3 @@
-
-
 # 类
 
 ## 封装与继承
@@ -44,9 +42,9 @@ virtual =0 关键字说明这是一个纯虚函数，需要在子类去实现它
 
 ## static关键字和extern关键字
 
-~~~
+```
 static
-~~~
+```
 
 
 
@@ -257,7 +255,6 @@ int main() {
 实现移动语义就必须增加两个函数：移动构造函数和移动赋值构造函数
 
 ```c++
-
 class myclass{
 	public：
 	~~~
@@ -416,22 +413,22 @@ atomic原子操作用于多线程资源互斥操作
 
 - malloc\free是C的**标准库函数**
 
- ```
+```
 void* malloc(size_t size)
 void* free(void* pointer)
- ```
+```
 
 
 
 - new\delete是C++的**操作运算符**
 
- ```c++
+```c++
 int* p1=new int(1);
 delete p1;
 
 int*p2=new int[4];
 delete []p2;
- ```
+```
 
   （1）malloc开辟空间类型大小需手动计算，new是由编译器自己计算；
 
