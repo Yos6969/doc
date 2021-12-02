@@ -20,7 +20,7 @@ RelWithDebInfo—— 既优化又能调试。
 
 一般在 make 后加 -DCMAKE_BUILD_TYPE=XXX来指定构建级别，也可以写入CMakeLists.txt
 
-
+/usr/bin/cmake --build /mnt/c/Users/18181/CLionProjects/cpp_redis/build --config Debug --target all -j 8
 
 # 命令
 
@@ -67,7 +67,12 @@ add_library(<name> ALIAS <target>)
 常见用法：
 
 ```cmake
-set(CMAKE_BUILD_TYPE Debug)//设定构建类型
+set(CMAKE_BUILD_TYPE "Debug")//设定构建类型
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_PKGCONFIG_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pkgconfig)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)//设定是否生成json配置文件
 ```
@@ -253,9 +258,34 @@ CMake 包含一个名为链接的工具：https://cmake.org/Wiki/CMake/Testing_W
 
 将写好的测试加入测试集
 
+```cmake
+option(BUILD_TESTS "option for test" OFF)
+option(BUILD_EXAMPLES "option for examples" ON)
+if(BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+  ExternalProject_Add("googletest"
+                      GIT_REPOSITORY "https://github.com/google/googletest.git"
+                      CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/deps")
+  # Reset variable to false to ensure tacopie does no build tests
+  set(BUILD_TESTS false)
+endif(BUILD_TESTS)
+```
+
+
+
 # CPack
 
 将cmake打包为deb文件发布
+
+```
+install(CODE "FILE(MAKE_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})")
+install(CODE "FILE(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})")
+# install cpp_redis
+install(DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/ DESTINATION lib USE_SOURCE_PERMISSIONS)
+install(DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ DESTINATION bin USE_SOURCE_PERMISSIONS)
+install(DIRECTORY ${CPP_REDIS_INCLUDES}/ DESTINATION include USE_SOURCE_PERMISSIONS)
+```
 
 
 

@@ -49,14 +49,28 @@ static
 
 
 - static修饰全局变量时，在静态存储器（bss、data段）开辟存储空间，其实全局变量本来就是被隐式static修饰的，被修饰后，这个变量只在本文件中使用（include进入文件也能用），如果要在其他源文件使用，需要加extern关键字
+
 - static修饰局部变量（一般是函数中的变量，函数中的变量一般在栈中，修饰后放入data段内），约等于全局变量，在整个进程周期中，只定义和初始化一次，
+
 - 关于初始化：可分为1.编译时初始化  2.加载时初始化  3.运行时初始化
   - 编译时初始化--静态变量是基本数据类型，且是个常值，是这样的
   - 加载时初始化--1.静态变量是一个基本数据类型，但是初始值非常量  2.静态变量是一个类对象
   - 运行时初始化--初始化发生在变量第一次被引用，对于局部静态对象是这样的 
+
 - static修饰函数，修饰函数时，表示该函数的作用域时源文件，其他文件无法调用该函数，一般用作某文件的内部函数使用
+
 - static修饰类成员变量：这个变量在所有这个类的对象间共享
-- static修饰类成员函数：对这个类来说，这个函数只能访问类的static成员
+
+- static修饰类成员函数:
+
+  　　静态成员函数
+  　　> 它的形参列表之中没有隐含的this指针
+  　　> 　　> 不能调用非静态的数据成员
+  　　> 　　> 　　> 不能调用非静态的成员函数
+  　　> 　　> 　　> 　　> 只能调用静态的成员
+  　　> 　　> 　　> 　　> 　　> 可以直接通过类名调用
+
+  ​
 
 ![6](.\img\6.png)
 
@@ -108,6 +122,196 @@ int main(){
     cout<<cp->operator double()<<endl;// 显示转为 double 100
     cout<<*cp<<endl;//隐式转为 double 100
 }
+```
+
+
+
+# std::thread()
+
+- 默认构造函数，创建一个空的 `std::thread` 执行对象。
+- 初始化构造函数，创建一个 `std::thread` 对象，该 `std::thread` 对象可被 `joinable`，新产生的线程会调用 `fn` 函数，该函数的参数由 `args` 给出。
+- 拷贝构造函数(被禁用)，意味着 `std::thread` 对象不可拷贝构造。
+- Move 构造函数，move 构造函数(move 语义是 C++11 新出现的概念，详见附录)，调用成功之后 `x` 不代表任何 `std::thread` 执行对象
+
+成员函数
+
+**join**：主线程等待子线程的终止。也就是说主线程的代码块中，如果碰到了t.join()方法，此时主线程需要等待（阻塞），等待子线程结束了(Waits for this thread to die.),才能继续执行t.join()之后的代码块。
+
+**get_id**: 获取线程 ID，返回一个类型为 std::thread::id 的对象。
+
+**joinable**: 检查线程是否可被 join。检查当前的线程对象是否表示了一个活动的执行线程，由默认构造函数创建的线程是不能被 join 的。另外，如果某个线程 已经执行完任务，但是没有被 join 的话，该线程依然会被认为是一个活动的执行线程，因此也是可以被 join 的。
+
+**detach**: Detach 线程。 将当前线程对象所代表的执行实例与该线程对象分离，使得线程的执行可以单独进行。一旦线程执行完毕，它所分配的资源将会被释放。
+
+调用 detach 函数之后：
+
+- `*this` 不再代表任何的线程执行实例。
+- joinable() == false
+- get_id() == std::thread::id()
+
+另外，如果出错或者 joinable() == false，则会抛出 std::system_error。
+
+- ```c++
+  #include <iostream>
+  #include <utility>
+  #include <thread>
+  #include <chrono>
+  #include <functional>
+  #include <atomic>
+
+  void f1(int n)
+  {
+      for (int i = 0; i < 5; ++i) {
+          std::cout << "Thread " << n << " executing\n";
+          std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      }
+  }
+
+  void f2(int& n)///这些参数会拷贝至新线程的内存空间中(同临时变量一样)。即使函数中的参数是引用的形式，拷贝操作也会执行。
+  {
+      for (int i = 0; i < 5; ++i) {
+          std::cout << "Thread 2 executing\n";
+          ++n;
+          std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      }
+  }
+
+  int main()
+  {
+      int n = 0;
+      std::thread t1; // t1 is not a thread
+      std::thread t2(f1, n + 1); // pass by value
+      std::thread t3(f2, std::ref(n)); // pass by reference 见函数声明注释
+      std::thread t4(std::move(t3)); // t4 is now running f2(). t3 is no longer a thread
+      t2.join();
+      t4.join();
+      std::cout << "Final value of n is " << n << '\n';
+  }
+  ```
+
+## 互斥量和临界区
+
+我们在操作系统、亦或是数据库的相关知识中已经了解过了有关并发技术的基本知识，mutex 就是其中的核心之一。 C++11 引入了 mutex 相关的类，其所有相关的函数都放在 <mutex> 头文件中。
+
+std::mutex 是 C++11 中最基本的 mutex 类，通过实例化 std::mutex 可以创建互斥量， 而通过其成员函数 lock() 可以进行上锁，unlock() 可以进行解锁。 但是在实际编写代码的过程中，最好不去直接调用成员函数， 因为调用成员函数就需要在每个临界区的出口处调用 unlock()，当然，还包括异常。 这时候 C++11 还为互斥量提供了一个 RAII 语法的模板类 std::lock_guard。 RAII 在不失代码简洁性的同时，很好的保证了代码的异常安全性。
+
+在 RAII 用法下，对于临界区的互斥量的创建只需要在作用域的开始部分，例如：
+
+
+```c++
+#include <thread>
+#include<iostream>
+int v = 1;
+
+void critical_section(int change_v) {
+
+static std::mutex mtx;
+std::lock_guard<std::mutex> lock(mtx);
+
+// 执行竞争操作
+v = change_v;
+
+// 离开此作用域后 mtx 会被释放
+int main(){
+  std::thread t1(critical_section, 2), t2(critical_section, 3);
+t1.join();
+t2.join();
+
+std::cout << v << std::endl;
+return 0;
+}
+```
+由于 C++ 保证了所有栈对象在生命周期结束时会被销毁，所以这样的代码也是异常安全的。 无论 critical_section() 正常返回、还是在中途抛出异常，都会引发堆栈回退，也就自动调用了 unlock()。
+
+而 std::unique_lock 则相对于 std::lock_guard 出现的，std::unique_lock 更加灵活， std::unique_lock 的对象会以独占所有权（没有其他的 unique_lock 对象同时拥有某个 mutex 对象的所有权） 的方式管理 mutex 对象上的上锁和解锁的操作。所以在并发编程中，推荐使用 std::unique_lock。
+
+std::lock_guard 不能显式的调用 lock 和 unlock， 而 std::unique_lock 可以在声明后的任意位置调用， 可以缩小锁的作用范围，提供更高的并发度。
+
+如果你用到了条件变量 std::condition_variable::wait 则必须使用 std::unique_lock 作为参数。
+
+例如：
+
+
+```c++
+#include <iostream>
+
+#include <thread>
+
+int v = 1;
+
+void critical_section(int change_v) {
+
+static std::mutex mtx;
+std::unique_lock<std::mutex> lock(mtx);
+// 执行竞争操作
+v = change_v;
+std::cout << v << std::endl;
+// 将锁进行释放
+lock.unlock();
+
+// 在此期间，任何人都可以抢夺 v 的持有权
+
+// 开始另一组竞争操作，再次加锁
+lock.lock();
+v += 1;
+std::cout << v << std::endl;
+  
+  int main(){
+    std::thread t1(critical_section, 2), t2(critical_section, 3);
+    t1.join();
+    t2.join();
+    return 0;
+  }
+```
+# std::future
+
+期物（Future）表现为 `std::future`，它提供了一个访问异步操作结果的途径，这句话很不好理解。 为了理解这个特性，我们需要先理解一下在 C++11 之前的多线程行为。
+
+试想，如果我们的主线程 A 希望新开辟一个线程 B 去执行某个我们预期的任务，并返回我一个结果。 而这时候，线程 A 可能正在忙其他的事情，无暇顾及 B 的结果， 所以我们会很自然的希望能够在某个特定的时间获得线程 B 的结果。
+
+在 C++11 的 `std::future` 被引入之前，通常的做法是： 创建一个线程 A，在线程 A 里启动任务 B，当准备完毕后发送一个事件，并将结果保存在全局变量中。 而主函数线程 A 里正在做其他的事情，当需要结果的时候，调用一个线程等待函数来获得执行的结果。
+
+而 C++11 提供的 `std::future` 简化了这个流程，可以用来获取异步任务的结果。 自然地，我们很容易能够想象到把它作为一种简单的线程同步手段，即屏障（barrier）。
+
+介绍std::prioise 和 std::pakaged_task:
+
+promise 对象可以保存某一类型 T 的值，该值可被 future 对象读取（可能在另外一个线程中），因此 promise 也提供了一种线程同步的手段。在 promise 对象构造时可以和一个共享状态（通常是std::future）相关联，并可以在相关联的共享状态(std::future)上保存一个类型为 T 的值。
+
+可以通过 get_future 来获取与该 promise 对象相关联的 future 对象，调用该函数之后，两个对象共享相同的共享状态(shared state)
+
+- promise 对象是异步 Provider，它可以在某一时刻设置共享状态的值。
+- future 对象可以异步返回共享状态的值，或者在必要的情况下阻塞调用者并等待共享状态标志变为 ready，然后才能获取共享状态的值。
+
+```c++
+#include <iostream>       // std::cout
+#include <functional>     // std::ref
+#include <thread>         // std::thread
+#include <future>         // std::promise, std::future
+
+void print_int(std::future<int>& fut) {
+    int x = fut.get(); // 获取共享状态的值.
+    std::cout << "value: " << x << '\n'; // 打印 value: 10.
+}
+
+int main ()
+{
+    std::promise<int> prom; // 生成一个 std::promise<int> 对象.
+    std::future<int> fut = prom.get_future(); // 和 future 关联.
+    std::thread t(print_int, std::ref(fut)); // 将 future 交给另外一个线程t.
+    prom.set_value(10); // 设置共享状态的值, 此处和线程t保持同步.
+    t.join();
+    return 0;
+}
+```
+
+std::packaged_task是std::promise的简化形式
+
+```c++
+    std::packaged_task<int()> task([]{ return 7; }); // wrap the function
+    std::future<int> f1 = task.get_future();  // get a future
+    std::thread t(std::move(task)); // launch on a thread
+	t.join();
+	std::cout<<f1.get()<<std::endl;
 ```
 
 
@@ -249,6 +453,7 @@ int main() {
 3. 常量左值， 使用 `const T&`, 既可以绑定**左值**又可以绑定**右值**<上面的代码示例了这一点>-----------函数参数中，传入一个例如  void fuc(const int & a)
 4. 已命名的**右值引用**，编译器会认为是个**左值**
 5. 编译器有返回值优化，但不要过于依赖
+6. 注意 ，不是所有&&都是右值引用，有时也有“通用引用(universal reference)”的含义，出现在类型推导的场景，详见下面的完美转发
 
 ## 移动语义
 
@@ -357,6 +562,8 @@ void RunCode(const int &m) {
 }
 
 // 这里利用了universal references，如果写T&,就不支持传入右值，而写T&&，既能支持左值，又能支持右值
+//int b=1;这是模板的特性 
+//auto && a=b;  //int a&&=b会报错
 template<typename T>
 void perfectForward(T && t) {
     RunCode(forward<T> (t));
@@ -405,7 +612,155 @@ nullptr关键字：nullptr是一种特殊类型的字面值，它可以被转换
 
 atomic原子操作用于多线程资源互斥操作
 
-新增STL容器array以及tuple
+新增STL容器array-和vector相比，大小是固定的，以及tuple，类似于pair，不过可以有多个值
+
+增加标准的线程库std::thread()
+
+
+
+# ASIO
+
+Boost.Asio is a cross-platform C++ library for network and low-level I/O programming that provides developers with a consistent asynchronous model using a modern C++ approach.
+
+## 异步回调
+
+```c++
+#include<iostream>
+#include<boost/asio.hpp>
+
+#include<boost/date_time/posix_time/posix_time.hpp>
+
+
+void print (const boost::system::error_code &){
+    std::cout<<"end"<<std::endl;
+
+}
+int 
+main(){
+    boost::asio::io_service io;
+    boost::asio::deadline_timer dead1(io,boost::posix_time::seconds(2));
+    dead1.async_wait(&print);
+    std::cout<<"hello,world1"<<std::endl;
+    io.run();
+    std::cout<<"hello,world"<<std::endl;
+}   
+```
+
+## 参数绑定
+
+```c++
+#include<iostream>
+#include<boost/asio.hpp>
+#include<boost/bind/bind.hpp>
+
+void print(const boost::system::error_code& /*e*/,
+    boost::asio::steady_timer* t, int* count)
+{
+  if (*count < 5)
+  {
+    std::cout << *count << std::endl;
+    ++(*count);
+
+    t->expires_at(t->expiry() + boost::asio::chrono::seconds(1));
+    t->async_wait(boost::bind(print,
+          boost::asio::placeholders::error, t, count));
+  }
+}
+
+int main()
+{
+  boost::asio::io_context io;
+
+  int count = 0;
+  boost::asio::steady_timer t(io, boost::asio::chrono::seconds(1));
+  t.async_wait(boost::bind(print,
+        boost::asio::placeholders::error, &t, &count));
+
+  io.run();
+
+  std::cout << "Final count is " << count << std::endl;
+
+  return 0;
+}
+```
+
+## 多线程同步
+
+```c++
+#include<iostream>
+#include<boost/asio.hpp>
+#include<boost/thread/thread.hpp>
+#include<boost/bind/bind.hpp>
+
+class printer
+{
+private:
+    boost::asio::steady_timer timer1_;
+    boost::asio::steady_timer timer2_;
+    boost::asio::strand<boost::asio::io_context::executor_type>strand_;
+    int count_;
+
+public:
+    printer(boost::asio::io_context& io)
+    : strand_(boost::asio::make_strand(io)),
+      timer1_(io, boost::asio::chrono::seconds(1)),
+      timer2_(io, boost::asio::chrono::seconds(1)),
+      count_(0)
+  {
+      
+    timer2_.async_wait(boost::asio::bind_executor(strand_,
+          boost::bind(&printer::print2, this)));
+    timer1_.async_wait(boost::asio::bind_executor(strand_,
+          boost::bind(&printer::print1, this)));
+
+  }
+
+ void print1()
+  {
+    if (count_ < 10)
+    {
+      std::cout << "Timer 1: " << count_ << std::endl;
+      ++count_;
+
+      timer1_.expires_at(timer1_.expiry() + boost::asio::chrono::seconds(1));
+
+      timer1_.async_wait(boost::asio::bind_executor(strand_,
+            boost::bind(&printer::print1, this)));
+    }
+  }
+
+  void print2()
+  {
+    if (count_ < 10)
+    {
+      std::cout << "Timer 2: " << count_ << std::endl;
+      ++count_;
+
+      timer2_.expires_at(timer2_.expiry() + boost::asio::chrono::seconds(1));
+
+      timer2_.async_wait(boost::asio::bind_executor(strand_,
+            boost::bind(&printer::print2, this)));
+    }
+  }
+  
+    ~printer(){
+        std::cout << "Final count is " << count_ << std::endl;
+    }
+
+};
+
+
+int main(){
+    boost::asio::io_context io;
+    printer p(io);
+    boost::thread t(boost::bind(&boost::asio::io_context::run, &io));
+  io.run();
+  t.join();
+
+}
+```
+
+
 
 # 关键字
 

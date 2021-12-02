@@ -85,6 +85,27 @@ int main() {
 
 > **提示：**注意 `auto` 关键字的妙用。有时候我们可能不太熟悉一个函数的返回值类型， 但是我们却可以通过 `auto` 的使用来规避这一问题的出现。
 
+```c++
+int f(int a, int b)
+{
+    return a + b;
+}
+
+int g(int a, int b, int c)
+{
+    return a + b + c;
+}
+bind(f, 1, 2) will produce a "nullary" function object that takes no arguments and returns f(1, 2). Similarly, bind(g, 1, 2, 3)() is equivalent to g(1, 2, 3).
+std::bind1st(std::ptr_fun(f), 5)(x);   // f(5, x)
+bind(f, 5, _1)(x);         // f(5, x)
+bind(f, _2, _1)(x, y);                 // f(y, x)
+bind(g, _1, 9, _1)(x);                 // g(x, 9, x)
+bind(g, _3, _3, _3)(x, y, z);          // g(z, z, z)
+bind(g, _1, _1, _1)(x, y, z);          // g(x, x, x)
+int x = 8;
+bind(std::less<int>(), _1, 9)(x);	// x < 9
+```
+
 ### bind1st
 
 绑定第一个值，将一个二元操作转换为一元操作。
