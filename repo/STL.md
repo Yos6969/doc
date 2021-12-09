@@ -12,6 +12,68 @@ elections.emplace_back("Nelson Mandela", "South Africa", 1994); //没有类的�
 
 emplace_back() 和 push_back() 的区别，就在于底层实现的机制不同。push_back() 向容器尾部添加元素时，首先会创建这个元素，然后再将这个元素拷贝或者移动到容器中（如果是拷贝的话，事后会自行销毁先前创建的这个元素）；而 emplace_back() 在实现时，则是直接在容器尾部创建这个元素，省去了拷贝或移动元素的过程。
 
+# priorty_queue<>
+
+在优先队列中，元素被赋予优先级。当访问元素时，具有最高优先级的元素最先删除。优先队列具有最高级先出 （first in, largest out）的行为特征。
+
+ ```c++
+ //升序队列，小顶堆
+ priority_queue <int,vector<int>,greater<int> > q;
+ //降序队列，大顶堆，默认 大的在上面
+ priority_queue <int,vector<int>,less<int> >q;
+ 
+ //greater和less是std实现的两个仿函数（就是使一个类的使用看上去像一个函数。其实现就是类中实现一个operator()，这个类就有了类似函数的行为，就是一个仿函数类了）
+ ```
+
+
+
+**首先要包含头文件`#include<queue>`**, 他和`queue`不同的就在于我们可以自定义其中数据的优先级, 让优先级高的排在队列前面,优先出队。
+
+优先队列具有队列的所有特性，包括队列的基本操作，只是在这基础上添加了内部的一个排序，它本质是一个堆实现的。
+
+> 和队列基本操作相同:
+>
+> - top 访问队头元素
+> - empty 队列是否为空
+> - size 返回队列内元素个数
+> - push 插入元素到队尾 (并排序)
+> - emplace 原地构造一个元素并插入队列
+> - pop 弹出队头元素
+> - swap 交换内容
+
+# 全排列-next_permuation()
+
+```c++
+#include<iostream>
+#include<stdio.h>
+#include<queue>
+#include<string>
+#include<string.h>
+#include<algorithm>
+using namespace std;
+
+int main()
+{
+    int a[3]={1,2,3};
+    do
+    {
+        cout<<a[0]<<" "<<a[1]<<" "<<a[2]<<endl;
+    }while(next_permutation(a,a+3));
+    return 0;
+}
+//输出
+/*
+ 1 2 3
+ 1 3 2
+ 2 1 3
+ 2 3 1
+ 3 1 2
+ 3 2 1
+ */
+```
+
+
+
 # 函数子和函数子类
 
 无论是C还是C++,都不允许将一个函数作为参数传递给另一个函数，必须传递函数指针
@@ -67,11 +129,36 @@ struct WidgetNameCompare:public std::binary_function<Widget,Widget,bool>{
 
 bind是STL中的一个适配器
 
+```c++
+class Solution {
+public:
+    bool AZ(const string &lhs,const string &rhs){
+        if(lhs.size()<rhs.size())
+            return true;
+        int sum1=0,sum2=0;
+        for(int i=0;i<lhs.size();i++){
+            sum1+=lhs[i];
+            sum2+=rhs[i];
+        }
+        if(sum1<sum2)
+            return true;
+    }
+
+    vector<vector<string>> groupAnagrams(vector<string>& strs) {
+        vector<vector<string>>ans;
+        sort(strs.begin(),strs.end(),std::bind(&Solution::AZ, this,placeholders::_1, placeholders::_2));
+
+    }
+};
+```
+
+
+
 ### std::bind`和 std::placeholder
 
 `std::bind` 是用来绑定函数调用的参数的， 它解决的需求是我们有时候可能并不一定能够一次性获得调用某个函数的全部参数，通过这个函数， 我们可以将部分调用参数提前绑定到函数身上成为一个新的对象，然后在参数齐全后，完成调用。 例如：
 
-```
+```c++
 int foo(int a, int b, int c) {
     ;
 }
@@ -81,6 +168,7 @@ int main() {
     // 这时调用 bindFoo 时，只需要提供第一个参数即可
     bindFoo(1);
 }
+
 ```
 
 > **提示：**注意 `auto` 关键字的妙用。有时候我们可能不太熟悉一个函数的返回值类型， 但是我们却可以通过 `auto` 的使用来规避这一问题的出现。
