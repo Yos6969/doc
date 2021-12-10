@@ -8,7 +8,7 @@ PON从技术原理来看，是一种由光纤组成的一点到多点拓扑结�
 
 ![5](.\IMG\5.PNG)
 
-注:obd为分光器、ODN是光缆网络
+注:obd为分光器、ODN是光缆网络、DLT是广播分发机、ONU\ONT是广播接收模块
 
 - 光信号下行传送流程为OLT发送信号通过ODN到达相应的多个下联ONT\ONU
 - 上行传送流程为ONT\ONU发送信号通过ODN到达信号收敛的一个OLT，而不会到达其他ONT
@@ -29,11 +29,19 @@ PON从技术原理来看，是一种由光纤组成的一点到多点拓扑结�
 
 ##无源光网络的发展与演变
 
-PON有多个技术分支，目前主流应用的PON技术为EPON和GPON
+PON有多个技术分支，目前主流应用的PON技术为EPON(以太无源光网)和GPON
 
 ![4](.\img\4.png)
 
 ![1](.\img\1.png)
+
+## EPON
+
+为了分离同一根光纤上多个用户偶的来去方向的信号，采用以下两种[复用技术](https://www.zhihu.com/search?q=复用技术&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A80270214})。
+
+a、下行数据流采用广播技术.
+
+b、上行数据流采用TDMA技术。
 
 ##软件定义无源光网络(SDON)
 
