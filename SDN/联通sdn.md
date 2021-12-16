@@ -50,4 +50,12 @@ OLT支持netconfig、ONU
 
 
 
- 从软件开发的角度 列一些功能，
+NETCONF 1.1(见IETF RFC 6241)
+
+YANG 1.1  (见IETF RFC 7950)
+
+https://datatracker.ietf.org/doc/html/draft-ietf-opsawg-ntf-02
+
+https://datatracker.ietf.org/doc/html/rfc7950#page-16
+
+https://datatracker.ietf.org/doc/html/rfc6020

@@ -116,10 +116,10 @@ select goods_category_id , avg(goods_price) as ag from sw_goods where ag>1000 gr
 
 where和having的区别
 
-```
+```c++
 where表示条件如果条件里有 sum avg等集合函数 需要使用 having
-Where 是一个约束声明，使用Where来约束来之数据库的数据，Where是在结果返回之前起作用的，且Where中不能使用聚合函数。
-Having 是一个过滤声明，是在查询返回结果集以后对查询结果进行的过滤操作，在Having中可以使用聚合函数。
+Where 是一个/*约束声明*/，使用Where来约束来自数据库的数据，Where是在结果返回之前起作用的，且Where中不能使用聚合函数。
+Having 是一个/*过滤声明*/，是在查询返回结果集以后对查询结果进行的过滤操作，在Having中可以使用聚合函数，一般和group by联合使用。
 ```
 
 
@@ -154,10 +154,10 @@ case when 挑选数值
 select (case when 语文 >=80 then ‘优秀’
        when 语文 >=60 then ‘及格’
         else ‘不及格’end) 语文,
-    (casewhen 数学 >=80then‘优秀’
+    (case when 数学 >=80then‘优秀’
        when 数学 >=60 then‘及格’ 
      else ‘不及格’end) 数学,
-    (casewhen 英语 >=80then ‘优秀’
+    (case when 英语 >=80then ‘优秀’
        when 英语 >=60 then ‘及格’
      else ‘不及格’end) 英语
  
