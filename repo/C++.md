@@ -826,9 +826,7 @@ private:
 thing sth = 1;//这里存在一个隐式转换
 ```
 
-
-
-# restrict
+##restrict
 
 在C语言中，restrict关键字用于修饰指针(C99标准)。通过加上restrict关键字，编程者可提示编译器：在该指针的生命周期内，其指向的对象不会被别的指针所引用。
 
