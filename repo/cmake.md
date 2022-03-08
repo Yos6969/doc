@@ -1,3 +1,21 @@
+# cmake的好处
+
+```
+跨平台，并可生成 native 编译配置文件，在 Linux/Unix 平台，生成 makefile，在苹果平台，可以生成 xcode，在 Windows 平台，可以生成 MSVC 的工程文件。
+
+能够管理大型项目。
+
+简化编译构建过程和编译过程。Cmake 的工具链非常简单：cmake+make。
+
+高效率，按照 KDE 官方说法，CMake 构建 KDE4 的 kdelibs 要比使用 autotools 来构建 KDE3.5.6 的 kdelibs 快 40%，主要是因为 Cmake 在工具链中没有 libtool
+
+可扩展，可以为 cmake 编写特定功能的模块，扩充 cmake 功能。
+```
+
+
+
+
+
 # 构建级别
 
 CMake具有许多内置的构建配置，可用于编译工程。 这些配置指定了代码优化的级别，以及调试信息是否包含在二进制文件中。
