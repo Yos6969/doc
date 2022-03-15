@@ -42,44 +42,37 @@ mutex可分为递归和非递归两种，也可叫做可重入和不可重入，
 ## 封装MutexLock、LockGuard、Condition
 
 ```c++
-class CAPABILITY("mutex") MutexLock : noncopyable
+#ifndef MUTEX_H
+#define MUTEX_H
+#include <assert.h>
+#include <pthread.h>
+namespace muduo
+{
+class  MutexLock :boost::noncopyable
 {
  public:
   MutexLock()
     : holder_(0)
   {
-    MCHECK(pthread_mutex_init(&mutex_, NULL));//动态初始化互斥量
+   pthread_mutex_init(&mutex_, NULL);
   }
 
   ~MutexLock()
   {
     assert(holder_ == 0);
-    MCHECK(pthread_mutex_destroy(&mutex_));
+    pthread_mutex_destroy(&mutex_);
   }
 
-  // must be called when locked, i.e. for assertion
-  bool isLockedByThisThread() const
+  void lock()
   {
-    return holder_ == CurrentThread::tid();
+    pthread_mutex_lock(&mutex_);
+   // assignHolder();
   }
 
-  void assertLocked() const ASSERT_CAPABILITY(this)
+  void unlock() 
   {
-    assert(isLockedByThisThread());
-  }
-
-  // internal usage
-
-  void lock() ACQUIRE()
-  {
-    MCHECK(pthread_mutex_lock(&mutex_));
-    assignHolder();
-  }
-
-  void unlock() RELEASE()
-  {
-    unassignHolder();
-    MCHECK(pthread_mutex_unlock(&mutex_));
+   // unassignHolder();
+    pthread_mutex_unlock(&mutex_);
   }
 
   pthread_mutex_t* getPthreadMutex() /* non-const */
@@ -87,40 +80,119 @@ class CAPABILITY("mutex") MutexLock : noncopyable
     return &mutex_;
   }
 
- private:
-  friend class Condition;
 
-  class UnassignGuard : noncopyable
-  {
-   public:
-    explicit UnassignGuard(MutexLock& owner)
-      : owner_(owner)
-    {
-      owner_.unassignHolder();
-    }
-
-    ~UnassignGuard()
-    {
-      owner_.assignHolder();
-    }
-
-   private:
-    MutexLock& owner_;
-  };
-
-  void unassignHolder()
-  {
-    holder_ = 0;
-  }
-
-  void assignHolder()
-  {
-    holder_ = CurrentThread::tid();
-  }
-
+private:
   pthread_mutex_t mutex_;
-  pid_t holder_;
 };
 
+class  MutexLockGuard : boost::noncopyable
+{
+ public:
+  explicit MutexLockGuard(MutexLock& mutex) 
+    : mutex_(mutex)
+  {
+    mutex_.lock();
+  }
+
+  ~MutexLockGuard() 
+  {
+    mutex_.unlock();
+  }
+
+ private:
+
+  MutexLock& mutex_;
+};
+
+}  // namespace muduo
+
+#endif
 ```
+
+```c++
+#include "Mutex.h"
+#include "pthread.h"
+namespace muduo{
+
+class Condition :boost::noncopyable{
+public:
+    explicit Condition(MutexLock & mutex):mutex_(mutex){
+        pthread_cond_init(&pcond_,NULL);
+    }
+
+    ~Condition(){
+        pthread_cond_destroy(&pcond_);
+    }
+
+    void wait(){
+        pthread_cond_wait(&pcond_,mutex_.getPthreadMutex());
+    }
+
+    void notify(){
+        pthread_cond_signal(&pcond_);
+    }
+
+    void notifyall(){
+        pthread_cond_broadcast(&pcond_);
+    }
+
+private:
+    MutexLock& mutex_;
+    pthread_cond_t pcond_;
+};
+
+
+
+}
+```
+
+# 单例Singleton，线程安全
+
+## pthread_once()
+
+在多线程环境中，有些事仅需要执行一次。通常当初始化应用程序时，可以比较容易地将其放在main函数中。但当你写一个库时，就不能在main里面初始化了，你可以用静态初始化，但使用一次初始化（pthread_once）会比较容易些。
+
+```
+int pthread_once(pthread_once_t *once_control, void (*init_routine) (void))；
+
+功能：本函数使用初值为PTHREAD_ONCE_INIT的once_control变量保证init_routine()函数在本进程执行序列中仅执行一次。
+```
+
+在多线程编程环境下，尽管pthread_once()调用会出现在多个线程中，init_routine()函数仅执行一次，究竟在哪个线程中执行是不定的，是由内核调度来决定。
+
+Linux Threads使用互斥锁和条件变量保证由pthread_once()指定的函数执行且仅执行一次，而once_control表示是否执行过。
+
+如果once_control的初值不是PTHREAD_ONCE_INIT（Linux Threads定义为0），pthread_once() 的行为就会不正常。
+
+在LinuxThreads中，实际"一次性函数"的执行状态有三种：NEVER（0）、IN_PROGRESS（1）、DONE （2），如果once初值设为1，则由于所有pthread_once()都必须等待其中一个激发"已执行一次"信号，因此所有pthread_once ()都会陷入永久的等待中；如果设为2，则表示该函数已执行过一次，从而所有pthread_once()都会立即返回0。
+
+# 多线程编程
+
+##多线程服务器的适用场合与常用模型
+
+###单线程常用模型
+
+例如
+
+Reactor模式 --非阻塞IO+多路复用
+
+程序的基本结构是一个事件循环，以事件驱动和事件回调的方式实现业务逻辑
+
+###多线程常用模型
+
+1.非阻塞IO+one loop per thread
+
+好处：
+
+- 线程数目基本固定，不会频繁创建与销毁
+- 可以方便地在线程间调配负载
+- IO事件发生的线程是固定地，同一个TCP连接不必考虑事件并发
+
+
+
+## 进程间通信只用TCP
+
+进程间通信首选Sockets，可以跨主机，把进程分散到同一局域网地多台机器上，而且TCP是双向的
+
+##多线程与IO
 

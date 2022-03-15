@@ -22,6 +22,64 @@
 
 ![2](.\img\未命名图片.png)
 
+###构造或析构函数中可以调用虚函数吗？
+
+```c++
+class A{
+public:
+    A(){
+        print();
+    }
+      ~A(){
+
+        //print();
+    }
+    virtual void print(){
+        cout<<"A->print()"<<endl;
+    }
+
+
+};
+
+class B: public A{
+public:
+    B(){
+        print();
+    }
+    ~B(){
+        //print();
+    }
+     void print(){
+        cout<<"B->print()"<<endl;
+    }
+};
+
+int main(){
+    cout<<"father pointer point to child obj"<<endl;
+    A* ba=new B();
+    cout<<"child pointer point to child obj"<<endl;
+    B* bb=new B();
+
+}
+//在构造函数调用print，按照构造顺序调用print版本
+//father pointer point to child obj
+//A->print()
+//B->print()
+//child pointer point to child obj
+//A->print()
+//B->print()
+
+//在析构函数调用print，按照析构顺序调用print版本
+//father pointer point to child obj
+//B->print()
+//A->print()
+//child pointer point to child obj
+//B->print()
+//A->print()
+```
+
+
+
 # 函数
 
 ## 虚函数
