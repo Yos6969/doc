@@ -313,3 +313,12 @@ ${PROJECT_BINARY_DIR}：build目录
 
 ${CMAKE_SOURCE_DIR}：makelists所在的目录
 
+```cmake
+file( GLOB src "*.cc" )
+
+file( GLOB inc "*.h")
+
+add_executable(EventLoop ${src} ${inc})
+
+```
+

@@ -200,7 +200,7 @@ SELECT column_name(s) FROM table1
 INNER JOIN table2 ON table1.column_name=table2.column_name;
 ```
 
-LEFT(RIGHT) JOIN 关键字从左(右)表返回所有的行，即使右(左)表中没有匹配。如果右(左)表中没有匹配，则结果为 NULL。
+LEFT(RIGHT) JOIN 关键字从左(右)表返回所有的行，即使右(左)表中没有匹配。
 
 ```sql
 SELECT Websites.name, access_log.count, access_log.date

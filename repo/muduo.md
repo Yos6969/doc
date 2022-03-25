@@ -194,5 +194,10 @@ Reactor模式 --非阻塞IO+多路复用
 
 进程间通信首选Sockets，可以跨主机，把进程分散到同一局域网地多台机器上，而且TCP是双向的
 
-##多线程与IO
 
+
+# Event Loop
+
+muduo并发模型one loop per thread + threadpool（计算线程池）
+
+![image-20220324153531298](.\img\muduoEventLoop.png)

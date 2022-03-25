@@ -179,6 +179,260 @@ int main(){
 }
 ```
 
+#Lambda
+
+先来看一下lambda表达式的语法形式：
+
+```
+[ capture ] ( params ) opt -> ret { body; };
+```
+
+其中carpture是捕获列表，params是参数，opt是选项，ret则是返回值的类型，body则是函数的具体实现。
+
+1.捕获列表描述了lambda表达式可以访问上下文中的哪些变量。
+	[] :表示不捕获任何变量
+	[=]：表示按值捕获变量
+	[&]：表示按引用捕获变量
+	[this]：值传递捕获当前的this
+	但是捕获列表不允许变量的重复传递：例如
+
+```
+[=,x]
+```
+
+上面这种捕获是不允许的，=表示按值的方式捕获所有的变量，x相当于被重复捕获了。
+
+2.params表示lambda的参数，用在{}中。
+3.opt表示lambda的选项，例如mutable，后面会介绍一下mutable的用法。
+4.ret表示lambda的返回值，也可以显示指明返回值，lambda会自动推断返回值，但是值得注意的是只有当lambda的表达式仅有一条return语句时，自动推断才是有效的。像下面这种的表达式就需要加上返回类型。
+
+```c++
+[](double x )->double{int y = x ;return x - y;};
+```
+
+虽然lambda表达式是匿名函数，但是实际上也可以给lambda表达式指定一个名称，如下表示：
+
+```c++
+auto f = [](int x ){return x % 3 ==0;};
+```
+
+# 智能指针
+
+智能指针(smart pointer)是存储指向动态分配（堆）对象指针的类，用于生存期控制，能够确保自动正确的销毁动态分配的对象，防止内存泄露（利用自动调用类的析构函数来释放内存）。它的一种通用实现技术是使用引用计数（除此之外还有资源独占(unique_ptr),只引用不计数（weak_ptr））。智能指针类将一个计数器与类指向的对象相关联，引用计数跟踪该类有多少个对象共享同一指针。每次创建类的新对象时，初始化指针并将引用计数置为1；当对象作为另一对象的副本而创建时，拷贝构造函数拷贝指针并增加与之相应的引用计数；对一个对象进行赋值时，赋值操作符减少左操作数所指对象的引用计数（如果引用计数为减至0，则删除对象），并增加右操作数所指对象的引用计数；调用析构函数时，构造函数减少引用计数（如果引用计数减至0，则删除基础对象）。
+
+## shared_ptr
+
+- *智能指针将一个计数器与类指向的对象相关联，引用计数跟踪共有多少个类对象共享同一指针*
+- 每次创建类的新对象时，初始化指针并将引用计数置为1
+- *当对象作为另一对象的副本而创建时，拷贝构造函数拷贝指针并增加与之相应的引用计数*
+- 对一个对象进行赋值时，赋值操作符减少左操作数所指对象的引用计数（如果引用计数为减至0，则删除对象），并增加右操作数所指对象的引用计数；这是因为左侧的指针指向了右侧指针所指向的对象，因此右指针所指向的对象的引用计数加1
+- 调用析构函数时，减少引用计数，如果引用计数减至0，则删除基础对象和引用计数对象
+
+```c++
+//
+// Created by 18181 on 2022/3/24.
+//
+
+#ifndef FORK_SHARED_PTR_H
+#define FORK_SHARED_PTR_H
+#include "iostream"
+
+template<typename T>
+class shared_ptr {
+public:
+    shared_ptr(T *_t) : p(_t), count_(new int(1)){}
+    shared_ptr() : p(nullptr), count_(nullptr){}
+
+    shared_ptr(shared_ptr<T>& r) {
+        p = r.get();
+        count_ = r.getcount();
+        if (count_) {
+            (*count_)++;
+        }
+    }
+
+    shared_ptr& operator=(const shared_ptr<T>& rhs) {
+        if(this == &rhs) {
+            return *this;
+        }
+
+        reset();
+        p = rhs.get();
+        count_ = rhs.getcount();
+
+        if(count_) {
+            (*count_)++;
+        }
+        return *this;
+    }
+
+    T* get() const {
+        return p;
+    }
+
+    int* getcount() const{
+        return count_;
+    }
+    int count(){
+        return count_?*count_:0;
+    }
+
+    T* operator->() {
+        return p;
+    }
+
+    T& operator*() {
+        return *p;
+    }
+
+    ~shared_ptr(){
+        reset();
+    }
+
+    void reset(){
+        if(count_){
+            (*count_)--;
+            if(*count_ == 0){
+                delete p;
+                delete count_;
+            }
+        }
+    }
+
+private:
+    T *p;
+    int * count_;
+};
+
+class A{
+public:
+	int s=1;
+    friend ostream& operator<<(std::ostream& os, const A&a){
+    os<<a.s;
+    return os;
+}
+};
+
+int main(){
+    shared_ptr<A> emp;
+    std::cout<< " empty shared_pointer emp count: " <<emp.count()<<std::endl;
+    shared_ptr<A> sp(new A());
+    std::cout<< " shared_pointer sp count: " <<sp.count()<<std::endl;
+    shared_ptr<A> sp2(sp);//sp2 share with sp
+    std::cout<< " shared_pointer sp count: " <<sp.count()<<" sp2 count: "<<sp2.count()<<std::endl;
+    shared_ptr<A> sp1(new A());
+    std::cout<< "after copy assignment sp1 count: "<< sp1.count() <<std::endl;
+    sp = sp1;
+    std::cout<< "after == assignment sp count: "<< sp.count() <<" sp1: " <<sp1.count()<<" sp2 count: "<<sp2.count()<<std::endl;
+
+    shared_ptr<A>a(new A());
+    std::cout<<*a<<std::endl;
+    std::cout<<a->s<<std::endl;
+
+}
+
+#endif //FORK_SHARED_PTR_H
+//输出
+//shared_ptr<A>a(new A());
+//std::cout<<*a<<std::endl;
+//std::cout<<a->s<<std::endl;
+```
+
+
+
+## weak_ptr
+
+- weak_ptr是一种持有被shared_ptr管理者的资源的弱引用的智能指针。它必须通过转化为shared_ptr来访问管理的资源。
+- weak_ptr被用来跟踪资源，它通过转化为shared_ptr来获取临时所有权。如果这个时候原先拥有资源的shared_ptr销毁了，资源的生命周期将会被延长至这个转化得到的shared_ptr析构之前。
+- weak_ptr另外一个作用是打破shared_ptr可能的循环引用（循环引用会导致应该释放的资源没有释放，此处不展开）。
+
+## unique_ptr
+
+和 shared_ptr 指针最大的不同之处在于，unique_ptr 指针指向的堆内存无法同其它 unique_ptr 共享，也就是说，每个 unique_ptr 指针都独自拥有对其所指堆内存空间的所有权。
+
+- *每个 unique_ptr 指针指向的堆内存空间的引用计数，都只能为 1*
+- 一旦该 unique_ptr 指针放弃对所指堆内存空间的所有权，则该空间会被立即释放回收。
+
+```c++
+//
+// Created by 18181 on 2022/3/25.
+//
+
+#ifndef FORK_UNIQUE_PTR_H
+#define FORK_UNIQUE_PTR_H
+#include "iostream"
+template<typename T>
+class unique_ptr {
+public:
+    unique_ptr():p_(nullptr), count_(nullptr){}
+    unique_ptr(T *_t):p_(_t),count_(new int(1)){}
+
+    unique_ptr(const unique_ptr& p) = delete;
+    unique_ptr<T>& operator=(const unique_ptr& p) = delete;
+    unique_ptr<T>& operator=(T* p) = delete;
+
+    T* get()
+    {
+        return p_;
+    }
+
+
+    int* getcount() const{
+        return count_;
+    }
+    int count(){
+        return count_?*count_:0;
+    }
+
+    T* operator->() {
+        return p_;
+    }
+
+    T& operator*() {
+        return *p_;
+    }
+
+
+    void reset(){
+        if(count_){
+            delete count_;
+            delete p_;
+        }
+    }
+
+
+private:
+    T * p_;
+    int *count_;
+};
+
+class A{
+public:
+    int s=1;
+
+
+};
+std::ostream& operator<<(std::ostream& os, const A&a){
+    os<<a.s;
+    return os;
+}
+int main(){
+    unique_ptr<A>up;
+    std::cout<< "empty unique_pointer emp count: " <<up.count()<<std::endl;
+    unique_ptr<A>a(new A());
+    std::cout<< "unique_pointer  count: " <<a.count()<<std::endl;
+    std::cout<<*a<<std::endl;
+    std::cout<<a->s<<std::endl;
+}
+
+#endif //FORK_UNIQUE_PTR_H
+//输出;
+//empty unique_pointer emp count: 0
+//unique_pointer  count: 1
+//1
+//1
+```
+
 
 
 # std::thread()
@@ -243,6 +497,13 @@ int main(){
       std::cout << "Final value of n is " << n << '\n';
   }
   ```
+
+## __thread关键字
+
+  __thread是GCC内置的线程局部存储设施，存取效率可以和全局变量相比。__thread变量每一个线程有一份独立实体，各个线程的值互不干扰。可以用来修饰那些带有全局性且值可能变，但是又不值得用全局变量保护的变量。
+
+       __thread使用规则：只能修饰POD类型(类似整型指针的标量，不带自定义的构造、拷贝、赋值、析构的类型，二进制内容可以任意复制memset,memcpy,且内容可以复原)，不能修饰class类型，因为无法自动调用构造函数和析构函数，可以用于修饰全局变量，函数内的静态变量，不能修饰函数的局部变量或者class的普通成员变量，且__thread变量值只能初始化为编译器常量(值在编译器就可以确定const int i=5,运行期常量是运行初始化后不再改变const int i=rand()).
+
 
 ## 互斥量和临界区
 
@@ -546,7 +807,7 @@ MyString& operator=(MyString&& str) noexcept{
 
 ### move
 
-对于一个左值，编译器肯定是调用拷贝构造函数，但是有些左值是**局部变量**，生命周期也很短，能不能也移动构造而不是拷贝构造呢？`C++11`为了解决这个问题，提供了`std::move()`方法来将左值转换为右值，从而方便应用移动语义
+对于一个左值，编译器肯定是调用拷贝构造函数，能不能也移动构造而不是拷贝构造呢？`C++11`为了解决这个问题，提供了`std::move()`方法来将左值转换为右值，从而方便应用移动语义
 
 ```c++
 for(int i=0;i<1000;i++){
@@ -848,6 +1109,29 @@ int main(){
 
 # 关键字
 
+## constexpr
+
+```c++
+constexpr int multiply(int x,int y)
+{
+    return x* y;
+}
+//将在编译时期计算
+const int var = multiply(10,10);
+```
+
+除了编译时计算性能的优化，congtexpr的另外一个优势是：允许函数被应用到以前调用宏的所有场合。例如：想要计算数组size的函数，size是10的倍数。如果不用constexpr，则需要创建一个宏或者模板，因为我们不能用函数的返回值去声明数组的大小。但是我们可以调用一个constexpr函数去声明一个数组。
+
+```c++
+constexpr int getDefaultArraySize(int value)
+{
+    return value*10;
+}
+int my_array[getDefaultArraySize(3)];
+```
+
+
+
 ## new\delete   和  malloc\free
 
 - malloc\free是C的**标准库函数**
@@ -982,7 +1266,142 @@ const常量需要进行内存分配
 const常量是常量的声明，有类型区别，需要在编译阶段进行类型检查
 ```
 
+## =default和=delete
+
+在C++中，声明自定义的类型之后，编译器会默认生成一些成员函数，这些函数被称为默认函数。其中包括
+
+（1）（默认）构造函数
+
+（2）拷贝（复制）构造函数
+
+（3）拷贝（复制）赋值运算符
+
+（4）移动构造函数
+
+（5）移动赋值运算符
+
+（6）析构函数
+
+另外，编译器还会默认生成一些操作符函数，包括
+
+（7）operator ,
+
+（8）operator &
+
+（9）operator &&
+
+（10）operator *
+
+（11）operator ->
+
+（12）operator ->*
+
+（13）operator new
+
+（14）operator delete
+
+
+
+
+
+
+
+【1】显式缺省函数（=default）
+
+如果类设计者又实现了这些函数的自定义版本后，编译器就不会去生成默认版本。
+
+大多数时候，我们需要声明带参数的构造函数，此时就不会生成默认构造函数，这样会导致类不再是POD类型（可参见随笔《[C++11 POD类型](https://www.cnblogs.com/Braveliu/p/12237340.html)》），从而影响类的优化：
+
+```c++
+#include <iostream>
+using namespace std;
+
+class Test
+{
+public:
+    Test(int i) : data(i) {}
+
+private:
+    int data;
+};
+
+int main()
+{
+    std::cout << std::is_pod<Test>::value << std::endl;  // 0
+}
+```
+
+C++11中提供了新的机制来控制默认函数生成来避免这个问题：声明时在函数末尾加上”= default”来显式地指示编译器去生成该函数的默认版本，这样就保证了类还是POD类型：
+
+```c++
+#include <iostream>
+using namespace std;
+
+class Test
+{
+public:
+    Test() = default;  // 显式指定缺省函数
+    Test(int i) : data(i) {}
+
+private:
+    int data;
+};
+
+int main()
+{
+    std::cout << std::is_pod<Test>::value << std::endl;  // 1
+}
+```
+
+
+
+
+
+【2】显式删除函数（=delete）
+
+另一方面，有时候可能需要限制一些默认函数的生成。
+
+例如：需要禁止拷贝构造函数的使用。以前通过把拷贝构造函数声明为private访问权限，这样一旦使用编译器就会报错。
+
+而在C++11中，只要在函数的定义或者声明后面加上”= delete”就能实现这样的效果（相比较，这种方式不容易犯错，且更容易理解）：
+
+```c++
+#include <iostream>
+using namespace std;
+
+class Test
+{
+public:
+    Test() = default;  // 显式指定缺省函数
+    Test(int i) : data(i) {}
+    Test(const Test& t) = delete; // 显式删除拷贝构造函数
+
+private:
+    int data;
+};
+
+int main()
+{
+    Test objT1;
+//    Test objT2(objT1); // 无法通过编译
+}
+```
+
+
+
 # 杂项
+
+## 面向对象
+
+```
+面向对象三大特性
+
+封装：数据和代码捆绑在一起，避免外界干扰和不确定性访问。封装可以使得代码模块化。确保用户代码不会无意间破坏封装对象的状态
+
+继承：让某种类型对象获得另一个类型对象的属性和方法。继承可以扩展已存在的代码
+
+多态：同一事物表现出不同事物的能力，即向不同对象发送同一消息，不同的对象在接收时会产生不同的行为（重载实现编译时多态，虚函数实现运行时多态）。多态的目的则是为了接口重用
+```
 
 
 
@@ -1061,4 +1480,7 @@ x86_64处理器地址线只有48条，
 两段加一起一共2^48 = 256TB，这就是当前处理器的寻址能力。
 一般我们是见不到第二段地址的，
 因为操作系统一般用低段地址，
-高段这部分需要你的机器至少有128T以上内存
+高段这部分需要你的机器至少有128T以上内存 
+
+## 全局对象构造顺序
+
