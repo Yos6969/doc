@@ -1,5 +1,29 @@
 # 类
 
+## 三五法则
+
+当定义一个类时，我们显式地或隐式地指定了此类型的对象在拷贝、赋值和销毁时做什么。一个类通过定义三种特殊的成员函数来控制这些操作：**拷贝构造函数**、**拷贝赋值运算符**和**析构函数**。
+
+拷贝构造函数定义了当用同类型的另一个对象初始化新对象时做什么，拷贝赋值运算符定义了将一个对象赋予同类型的另一个对象时做什么，析构函数定义了此类型的对象销毁时做什么。我们将这些操作称为**拷贝控制操作**。
+
+------
+
+　　由于拷贝控制操作是由三个特殊的成员函数来完成的，所以我们称此为“C++三法则”。在较新的 C++11 标准中，为了支持移动语义，
+　　又增加了移动构造函数和移动赋值运算符，这样共有五个特殊的成员函数，所以又称为“C++五法则”。
+　　也就是说，“三法则”是针对较旧的 C++89 标准说的，“五法则”是针对较新的 C++11 标准说的。
+　　为了统一称呼，后来人们把它叫做“C++ 三/五法则”。
+
+------
+
+**“需要析构函数的类也需要拷贝和赋值操作”**
+　　从“需要析构函数”可知，类中必然出现了指针类型的成员（否则不需要我们写析构函数，默认的析构函数就够了），所以，我们需要自己写析构函数来释放给指针所分配的内存来防止内存泄漏。
+　　那么为什么说“也需要拷贝构造函数和赋值操作”呢？原因是：类中出现了指针类型的成员，必须防止浅拷贝问题。所以需要自己书写拷贝构造函数和拷贝赋值运算符，而不能使用默认的拷贝构造函数和默认的拷贝赋值运算符。
+
+**“需要拷贝操作的类也需要赋值操作，反之亦然”**
+
+**“析构函数不能是删除的成员”**
+　　如果析构函数是删除的，那么无法销毁此类型的对象。对于一个删除了析构函数的类型，编译器不允许定义该类型的变量或创建该类的临时对象。而且，如果一个类有某个成员的类型删除了析构函数，我们也不能定义该类的变量或临时对象。
+
 ## 封装与继承
 
 ### 几种继承方式
@@ -216,6 +240,93 @@ int main(){
 auto f = [](int x ){return x % 3 ==0;};
 ```
 
+# c++内存泄漏
+
+\1. 在类的构造函数和析构函数中没有匹配的调用new和delete函数
+
+两种情况下会出现这种内存泄露：一是在堆里创建了对象占用了内存，但是没有显示地释放对象占用的内存；二是在类的构造函数中动态的分配了内存，但是在析构函数中没有释放内存或者没有正确的释放内存
+
+\2. 没有正确地清除嵌套的对象指针
+
+\3. 在释放对象数组时在delete中没有使用方括号
+
+方括号是告诉编译器这个指针指向的是一个对象数组，同时也告诉编译器正确的对象地址值并调用对象的析构函数，如果没有方括号，那么这个指针就被默认为只指向一个对象，对象数组中的其他对象的析构函数就不会被调用，结果造成了内存泄露。如果在方括号中间放了一个比对象数组大小还大的数字，那么编译器就会调用无效对象（内存溢出）的析构函数，会造成堆的奔溃。如果方括号中间的数字值比对象数组的大小小的话，编译器就不能调用足够多个析构函数，结果会造成内存泄露。
+
+释放单个对象、单个基本数据类型的变量或者是基本数据类型的数组不需要大小参数，释放定义了析构函数的对象数组才需要大小参数。
+
+\4. 指向对象的指针数组不等同于对象数组
+
+对象数组是指：数组中存放的是对象，只需要delete []p，即可调用对象数组中的每个对象的析构函数释放空间
+
+指向对象的指针数组是指：数组中存放的是指向对象的指针，不仅要释放每个对象的空间，还要释放每个指针的空间，delete []p只是释放了每个指针，但是并没有释放对象的空间，正确的做法，是通过一个循环，将每个对象释放了，然后再把指针释放了。
+
+\5. 缺少拷贝构造函数
+
+两次释放相同的内存是一种错误的做法，同时可能会造成堆的奔溃。
+
+按值传递会调用（拷贝）构造函数，引用传递不会调用。
+
+在C++中，如果没有定义拷贝构造函数，那么编译器就会调用默认的拷贝构造函数，会逐个成员拷贝的方式来复制数据成员，如果是以逐个成员拷贝的方式来复制指针被定义为将一个变量的地址赋给另一个变量。这种隐式的指针复制结果就是两个对象拥有指向同一个动态分配的内存空间的指针。当释放第一个对象的时候，它的析构函数就会释放与该对象有关的动态分配的内存空间。而释放第二个对象的时候，它的析构函数会释放相同的内存，这样是错误的。
+
+所以，如果一个类里面有指针成员变量，要么必须显示的写拷贝构造函数和重载赋值运算符，要么禁用拷贝构造函数和重载赋值运算符
+
+ C++中构造函数，拷贝构造函数和赋值函数的区别和实现参见：http://www.cnblogs.com/liushui-sky/p/7728902.html
+
+\6. 缺少重载赋值运算符
+
+这种问题跟上述问题类似，也是逐个成员拷贝的方式复制对象，如果这个类的大小是可变的，那么结果就是造成内存泄露，如下图:
+
+\7. 关于nonmodifying运算符重载的常见迷思
+
+a. 返回栈上对象的引用或者指针（也即返回局部对象的引用或者指针）。导致最后返回的是一个空引用或者空指针，因此变成野指针
+
+b. 返回内部静态对象的引用。
+
+c. 返回一个泄露内存的动态分配的对象。导致内存泄露，并且无法回收
+
+解决这一类问题的办法是重载运算符函数的返回值不是类型的引用，二应该是类型的返回值，即不是 int&而是int
+
+\8. 没有将基类的析构函数定义为虚函数
+
+当基类指针指向子类对象时，如果基类的析构函数不是virtual，那么子类的析构函数将不会被调用，子类的资源没有正确是释放，因此造成内存泄露
+
+9.析构的时候void*，导致析构函数没有调用
+
+10.构造的时候浅拷贝，释放的时候调用了两侧delete
+
+11.野指针：指向被释放的或者访问受限内存的指针。
+
+造成野指针的原因：
+
+指针变量没有被初始化（如果值不定，可以初始化为NULL）
+指针被free或者delete后，没有置为NULL, free和delete只是把指针所指向的内存给释放掉，并没有把指针本身干掉，此时指针指向的是“垃圾”内存。释放后的指针应该被置为NULL.
+指针操作超越了变量的作用范围，比如返回指向栈内存的指针就是野指针。
+
+
+
+解决办法：
+
+（1）shared_ptr共享的智能指针：
+
+shared_ptr使用引用计数，每一个shared_ptr的拷贝都指向相同的内存。在最后一个shared_ptr析构的时候，内存才会被释放。
+
+注意事项： 
+1.不要用一个原始指针初始化多个shared_ptr。 
+2.不要再函数实参中创建shared_ptr，在调用函数之前先定义以及初始化它。 
+3.不要将this指针作为shared_ptr返回出来。 
+4.要避免循环引用。
+
+（2）unique_ptr独占的智能指针：
+
+<1>Unique_ptr是一个独占的智能指针，他不允许其他的智能指针共享其内部的指针，不允许通过赋值将一个unique_ptr赋值给另外一个 unique_ptr。
+
+<2>unique_ptr不允许复制，但可以通过函数返回给其他的unique_ptr，还可以通过std::move来转移到其他的unique_ptr，这样它本身就不再 拥有原来指针的所有权了。
+
+<3>如果希望只有一个智能指针管理资源或管理数组就用unique_ptr，如果希望多个智能指针管理同一个资源就用shared_ptr。
+
+(3)weak_ptr弱引用的智能指针：
+弱引用的智能指针weak_ptr是用来监视shared_ptr的，不会使引用计数加一，它不管理shared_ptr内部的指针，主要是为了监视shared_ptr的生命 周期，更像是shared_ptr的一个助手。 weak_ptr没有重载运算符*和->，因为它不共享指针，不能操作资源，主要是为了通过shared_ptr获得资源的监测权，它的构造不会增加引用计数，它的析构不会减少引用计数，纯粹只是作为一个旁观者来监视shared_ptr中关连的资源是否存在。 weak_ptr还可以用来返回this指针和解决循环引用的问题。
+
 # 智能指针
 
 智能指针(smart pointer)是存储指向动态分配（堆）对象指针的类，用于生存期控制，能够确保自动正确的销毁动态分配的对象，防止内存泄露（利用自动调用类的析构函数来释放内存）。它的一种通用实现技术是使用引用计数（除此之外还有资源独占(unique_ptr),只引用不计数（weak_ptr））。智能指针类将一个计数器与类指向的对象相关联，引用计数跟踪该类有多少个对象共享同一指针。每次创建类的新对象时，初始化指针并将引用计数置为1；当对象作为另一对象的副本而创建时，拷贝构造函数拷贝指针并增加与之相应的引用计数；对一个对象进行赋值时，赋值操作符减少左操作数所指对象的引用计数（如果引用计数为减至0，则删除对象），并增加右操作数所指对象的引用计数；调用析构函数时，构造函数减少引用计数（如果引用计数减至0，则删除基础对象）。
@@ -365,21 +476,42 @@ template<typename T>
 class unique_ptr {
 public:
     unique_ptr():p_(nullptr), count_(nullptr){}
-    unique_ptr(T *_t):p_(_t),count_(new int(1)){}
+    explicit unique_ptr(T *_t):p_(_t),count_(new int(1)){}
+    ~unique_ptr(){
+        if(count_){
+        delete p_;
+        delete count_;}
+    }
 
-    unique_ptr(const unique_ptr& p) = delete;
-    unique_ptr<T>& operator=(const unique_ptr& p) = delete;
+    // Disable copy from lvalue.
+    unique_ptr(const unique_ptr&) = delete;
+    unique_ptr& operator=(const unique_ptr&) = delete;
+
+    unique_ptr( unique_ptr<T>&& rhs){
+        p_ = rhs.get();
+        count_ = rhs.getcount();
+        rhs.reset();
+    }
+
+    unique_ptr<T>& operator=( unique_ptr&& rhs){
+
+        p_ = rhs.get();
+        count_ = rhs.getcount();
+        rhs.reset();
+        return *this;
+    }
+
     unique_ptr<T>& operator=(T* p) = delete;
 
-    T* get()
+    T* get() const
     {
         return p_;
     }
 
-
     int* getcount() const{
         return count_;
     }
+
     int count(){
         return count_?*count_:0;
     }
@@ -395,8 +527,8 @@ public:
 
     void reset(){
         if(count_){
-            delete count_;
-            delete p_;
+            count_ = nullptr;
+            p_ = nullptr;
         }
     }
 
@@ -412,25 +544,132 @@ public:
 
 
 };
-std::ostream& operator<<(std::ostream& os, const A&a){
+
+class B : private A{
+public:
+    int s=2;
+
+    void  print(){
+        std::cout << A::s <<std::endl;
+    }
+};
+std::ostream& operator<<(std::ostream& os, A&a){
     os<<a.s;
     return os;
 }
+
 int main(){
     unique_ptr<A>up;
     std::cout<< "empty unique_pointer emp count: " <<up.count()<<std::endl;
     unique_ptr<A>a(new A());
     std::cout<< "unique_pointer  count: " <<a.count()<<std::endl;
+    //a = std::move(up);
     std::cout<<*a<<std::endl;
     std::cout<<a->s<<std::endl;
+   
+
 }
 
 #endif //FORK_UNIQUE_PTR_H
+
 //输出;
 //empty unique_pointer emp count: 0
 //unique_pointer  count: 1
 //1
 //1
+```
+
+# std::atomic--参考操作系统.md
+
+<atomic>
+
+　std::atomic对int, char, bool等数据结构进行原子性封装，在多线程环境中，对std::atomic对象的访问不会造成竞争-冒险。利用std::atomic可实现数据结构的无锁设计。
+
+1. **std::atomic_flag**
+
+　　std::atomic_flag是一个原子的布尔类型，可支持两种原子操作：
+
+- test_and_set, 如果atomic_flag对象被设置，则返回true; 如果atomic_flag对象未被设置，则设置之，返回false
+- clear. 清除atomic_flag对象
+
+　　std::atomic_flag可用于多线程之间的同步操作，类似于linux中的信号量。使用atomic_flag可实现mutex.
+
+2. **std::atomic**
+
+　　std::atomic对int, char, bool等数据结构进行原子性封装，在多线程环境中，对std::atomic对象的访问不会造成竞争-冒险。利用std::atomic可实现数据结构的无锁设计。
+
+```c++
+#include <stack>
+#include <iostream>
+#include "thread"
+#include "atomic"
+
+class MutexTest
+{
+public:
+    MutexTest(): m_charStack() { }
+    ~MutexTest() { }
+
+    void Push(int n, char c)
+    {
+        //类似加锁，只能有一个取得，不保证顺序，可能是aaabbb，也可能是bbbaaa
+        while(lock.test_and_set(std::memory_order_relaxed)) ;
+            for (int i = 0; i < n; ++i) {
+                m_charStack.push(c);
+                std::cout << c;
+            }
+        lock.clear();
+        std::cout << std::endl;
+    }
+private:
+    std::stack<char> m_charStack;
+    std::atomic_flag lock =  ATOMIC_FLAG_INIT;
+
+};
+int main() {
+    MutexTest test;
+    std::thread mutexTestThread1(&MutexTest::Push, &test, 10, 'a');
+    std::thread mutexTestThread2(&MutexTest::Push, &test, 10, 'b');
+
+    mutexTestThread1.join();
+    mutexTestThread2.join();
+}
+```
+
+```c++
+#include <iostream>
+#include <thread>
+#include <atomic>
+
+using namespace std;
+
+//std::atomic<long> cnt(0);
+std::atomic_long cnt(0);
+
+void counter()
+{
+    for (int i = 0; i < 100000; i++) {
+        cnt += 1;
+    }
+}
+
+int main(int argc, char* argv[])
+{
+    auto t1 = std::chrono::high_resolution_clock::now();
+    std::thread threads[100];
+    for (int i = 0; i != 100; i++)
+    {
+        threads[i] = std::thread(counter);
+    }
+    for (auto &th : threads)
+        th.join();
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = t2 - t1;
+    std::cout << "result: " << cnt << std::endl;
+    std::cout << "duration: " << elapsed.count() << " ms" << std::endl;
+    return 0;
+}
 ```
 
 
@@ -1132,6 +1371,42 @@ int my_array[getDefaultArraySize(3)];
 
 
 
+## using
+
+- **命名空间的使用**
+
+using namespace std;
+
+- **在子类中引用基类的成员**
+
+using A::valueA
+
+```c++
+class A{
+public:
+    int s=1;
+
+
+};
+
+class B : private A{
+public:
+    int s=2;
+
+    void  print(){
+        std::cout << A::s <<std::endl; //1
+    }
+};
+```
+
+- **别名指定**
+
+```cpp
+using value_type = _Ty
+```
+
+以后使用value_type value; 就代表_Ty value,等于 typedef
+
 ## new\delete   和  malloc\free
 
 - malloc\free是C的**标准库函数**
@@ -1161,7 +1436,26 @@ delete []p2;
 
   （4）无论释放几个空间大小，free只传递指针，多个对象时delete需加[]
 
+## new运算符和operator new()
 
+new：指我们在C++里通常用到的运算符，比如A* a = new A;  对于new来说，有new和::new之分，前者位于std
+
+operator new()：指对new的重载形式，它是一个函数，并不是运算符。对于operator new来说，分为全局重载和类重载，全局重载是void* ::operator new(size_t size)，在类中重载形式 void* A::operator new(size_t size)。还要注意的是这里的operator new()完成的操作一般只是分配内存，事实上系统默认的全局::operator new(size_t size)也只是调用malloc分配内存，并且返回一个void*指针。而构造函数的调用(如果需要)是在new运算符中完成的
+
+## new和operator new之间的关系
+
+A* a = new A；我们知道这里分为两步：1.分配内存，2.调用A()构造对象。事实上，分配内存这一操作就是由operator new(size_t)来完成的，如果类A重载了operator new，那么将调用A::operator new(size_t )，如果没有重载，就调用::operator new(size_t )，全局new操作符由C++默认提供。因此前面的两步也就是：1.调用operator new 2.调用构造函数。
+
+（1）new ：不能被重载，其行为总是一致的。它先调用operator new分配内存，然后调用构造函数初始化那段内存。
+
+new 操作符的执行过程：
+\1. 调用operator new分配内存 ；
+\2. 调用构造函数生成类对象；
+\3. 返回相应指针。
+
+（2）operator new：要实现不同的内存分配行为，应该重载operator new，而不是new。
+
+operator new就像operator + 一样，是可以重载的。如果类中没有重载operator new，那么调用的就是全局的::operator new来完成堆的分配。同理，operator new[]、operator delete、operator delete[]也是可以重载的。
 
 ## inline
 
@@ -1481,6 +1775,67 @@ x86_64处理器地址线只有48条，
 一般我们是见不到第二段地址的，
 因为操作系统一般用低段地址，
 高段这部分需要你的机器至少有128T以上内存 
+
+##限制对象只能建立在堆上或者栈上
+
+1.限制为堆对象
+
+ 当对象建立在栈上面时，是由编译器分配内存空间的，调用构造函数来构造栈对象。当对象使用完后，编译器会调用析构函数来释放栈对象所占的空间。编译器管理了对象的整个生命周期。如果编译器无法调用类的析构函数，情况会是怎样的呢？比如，类的析构函数是私有的，编译器无法调用析构函数来释放内存。所以，编译器在为类对象分配栈空间时，会先检查类的析构函数的访问性，其实不光是析构函数，只要是非静态的函数，编译器都会进行检查。如果类的析构函数是私有的，则编译器不会在栈空间上为类对象分配内存。
+
+        因此，将析构函数设为私有，类对象就无法建立在栈上了
+另一个问题是，类的使用很不方便，使用new建立对象，却使用destory函数释放对象，而不是使用delete。（使用delete会报错，因为delete对象的指针，会调用对象的析构函数，而析构函数类外不可访问）这种使用方式比较怪异。为了统一，可以将构造函数设为protected，然后提供一个public的static函数来完成构造，这样不使用new，而是使用一个函数来构造，使用一个函数来析构。代码如下，类似于单例模式：
+
+2.限制为栈对象
+
+ 只有使用new运算符，对象才会建立在堆上，因此，只要禁用new运算符就可以实现类对象只能建立在栈上。将operator new()设为私有即可。代码如下：
+
+```c++
+class A
+{
+private:
+    void* operator new(size_t t){}     // 注意函数的第一个参数和返回值都是固定的
+    void operator delete(void* ptr){} // 重载了new就需要重载delete
+public:
+    A(){}
+    ~A(){}
+};
+```
+
+```c++
+class Sobj{
+private:
+    ~Sobj() = default;
+};
+
+//堆对象
+class Dobj{
+private:
+    void* operator new(size_t t){}
+};
+
+int main()
+{
+    Sobj *s = new Sobj();
+    //Sobj s1;
+    Dobj d;
+    //Dobj d1 = new Dobj();
+    
+}
+```
+
+##查看大小端
+
+```c++
+int main()
+{
+	int a = 0x12345678;
+	char* b = (char*)&a;
+	if(*b)
+		cout<<"小端"<<endl;
+}
+```
+
+
 
 ## 全局对象构造顺序
 
