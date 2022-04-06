@@ -1,5 +1,21 @@
 # vector
 
+## vector扩容机制
+
+vs扩容每次增大1.5倍
+
+# list
+
+std::list的底层是双向链表结构，双向链表中每个元素存储在互不相关的独立节点中，在节点中通过指针指向其前一个元素和后一个元素。
+
+# vector和list区别
+
+| vector                                                       | list                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| vector任意位置插入和删除的效率低，因为它每插入一个元素（尾插除外），都需要搬移数据，时间复杂度是O(N)，而且插入还有可能要增容，这样一来还要开辟新空间，拷贝元素，是旧空间，效率会更低。 | list任意位置插入和删除的效率高，他不需要搬移元素，只需要改变插入或删除位置的前后两个节点的指向即可，时间复杂度为O(1)。 |
+| vector由于底层是动态顺序表，在内存中是一段连续的空间，所以不容易造成内存碎片，空间利用率高，缓存利用率高。 | list的底层节点动态开辟空间，容易造成内存碎片，空间利用率低，缓存利用率低。 |
+| vector适合需要高效率存储，需要随机访问，并且不管行插入和删除效率的场景。 | list适合有大量的插入和删除操作，并且不关心随机访问的场景。   |
+
 ## push_back() and emplace_back()
 
 emplace_back:在容器尾部添加一个元素，这个元素原地构造，不需要触发拷贝构造和转移构造。而且调用形式更加简洁，直接根据参数初始化临时对象的成员
@@ -17,7 +33,7 @@ emplace_back() 和 push_back() 的区别，就在于底层实现的机制不同�
 在优先队列中，元素被赋予优先级。当访问元素时，具有最高优先级的元素最先删除。优先队列具有最高级先出 （first in, largest out）的行为特征。
 
  ```c++
- //升序队列，小顶堆
+ //升序队列，小顶堆，小的在上面
  priority_queue <int,vector<int>,greater<int> > q;
  //降序队列，大顶堆，默认 大的在上面
  priority_queue <int,vector<int>,less<int> >q;
@@ -73,6 +89,39 @@ int main()
 ```
 
 
+
+# std::function
+
+不同类型可能具有相同的调用形式，如：
+
+```cpp
+// 普通函数
+int add(int a, int b){return a+b;} 
+
+// lambda表达式
+auto mod = [](int a, int b){ return a % b;}
+
+// 函数对象类
+struct divide{
+    int operator()(int denominator, int divisor){
+        return denominator/divisor;
+    }
+};
+```
+
+上述三种可调用对象虽然类型不同，但是共享了一种调用形式：
+
+```cpp
+int(int ,int)
+```
+
+std::function就可以将上述类型保存起来，如下：
+
+```cpp
+std::function<int(int ,int)>  a = add; 
+std::function<int(int ,int)>  b = mod ; 
+std::function<int(int ,int)>  c = divide(); 
+```
 
 # 函数子和函数子类
 
@@ -192,47 +241,6 @@ bind(g, _3, _3, _3)(x, y, z);          // g(z, z, z)
 bind(g, _1, _1, _1)(x, y, z);          // g(x, x, x)
 int x = 8;
 bind(std::less<int>(), _1, 9)(x);	// x < 9
-```
-
-### bind1st
-
-绑定第一个值，将一个二元操作转换为一元操作。
-
-1.返回一个对象给调用者
-
-2.如果我们需要判断一个数是否小于10，那么因为10是固定的，相当只要传入一个变量即可，因此这里使用函数适配器将`std::less`适配成为`is_large_tn`,绑定的参数作为原函数第一个参数，传入的作为第二个
-
-```c++
-void bind_test()
-{
-	auto is_large_tn = std::bind1st(std::less<int>(), 10);
-	std::cout << is_large_tn(5) << std::endl;//0
-	std::cout << is_large_tn(15) << std::endl;//1
-}
-int main()
-{
-    bind_test();
-    return 0;
-}
-
-```
-
-### bind2nd
-
-和第一个不同，它绑定第二个参数，写出和第一个函数相同功能代码如下
-
-```c++
-void bind_test()
-{
-	auto is_large_tn = std::bind2nd(std::greater<int>(), 10);
-	std::cout << is_large_tn(5) << std::endl;//0
-	std::cout << is_large_tn(15) << std::endl;//1
-}
-int main()
-{
-    bind_test();
-    return 0;
-}
 ```
 
 ## mem_fun()&&mem_fun_ref()

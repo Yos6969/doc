@@ -52,7 +52,17 @@ set logging file <文件名>  设置输出的文件名称
 set logging on  输入这个命令后，此后的调试信息将输出到指定文件
 ```
 
+# 多线程调试
 
+- info thread  查看当前进程的线程
+- thread ID 切换调试的线程为指定ID
+- set scheduler-locking off|on|step   off-不锁定任何线程  on-只有当前被调程序执行  step-阻止其他线程在当前线程单步调试的时候抢占当前线程。只有当next、continue、util以及finish的时候，其他线程才会获得重新运行的。
+
+调试正在运行的程序，首先得到PID
+
+进入调试  gdb attach PID
+
+玩明白了~
 
 # 生成core文件
 

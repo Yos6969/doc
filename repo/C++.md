@@ -42,6 +42,23 @@
 
 ### 空类的默认函数
 
+要默认生成六个默认函数！！！
+
+![这里写图片描述](.\img\classdefault.png)
+
+```c++
+class A
+{
+public:
+    A();//构造函数
+    A(const A& a);//拷贝构造函数
+    ~A();//析构函数
+    A& operator=(const A& a);//赋值运算符重载
+    A* operator &();//取地址运算符重载
+    const A* operator &() const;//const修饰的取地址运算符重载
+};
+```
+
 
 
 ![2](.\img\未命名图片.png)
@@ -118,7 +135,22 @@ virtual =0 关键字说明这是一个纯虚函数，需要在子类去实现它
 
 ![5](.\img\5.png)
 
+## 父类构造函数不可以是虚函数
 
+当类中声明虚函数时，编译器会在类中生成一个虚函数表，虚函数表是一个存储成员函数指针的数据结构。
+
+虚函数表是由编译器自动生成与维护的，virtual成员函数会被编译器放入虚函数表中，当存在虚函数时，每个对象都有一个指向虚函数的指针(vptr指针)。在实现多态的过程中，父类和派生类都有vptr指针。
+
+vptr的初始化：当对象在创建时，由编译器对vptr指针进行初始化。在定义子类对象时，vptr先指向父类的虚函数表，在父类构造完成之后，子类的vptr才指向自己的虚函数表。
+
+如果构造函数时虚函数，那么调用构造函数就需要去找vptr，而此时vptr还没有初始化。
+
+## 析构函数常常是虚函数
+
+与构造函数不同，vptr已经完成初始化，析构函数可以声明为虚函数，且类有继承时，析构函数常常必须为虚函数。
+
+- 若析构函数是虚函数，delete 时，基类和子类都会被释放；
+- 若析构函数不是虚函数，delete 时，只有基类会被释放，而子类没有释放，从而存在内存泄漏的隐患。
 
 # 类型
 
@@ -128,9 +160,7 @@ virtual =0 关键字说明这是一个纯虚函数，需要在子类去实现它
 static
 ```
 
-
-
-- static修饰全局变量时，在静态存储器（bss、data段）开辟存储空间，其实全局变量本来就是被隐式static修饰的，被修饰后，这个变量只在本文件中使用（include进入文件也能用），如果要在其他源文件使用，需要加extern关键字
+- static修饰全局变量时，在静态存储区（bss、data段）开辟存储空间，其实全局变量本来就是被隐式static修饰的，被修饰后，这个变量只在本文件中使用（include进入文件也能用），如果要在其他源文件使用，需要加extern关键字
 
 - static修饰局部变量（一般是函数中的变量，函数中的变量一般在栈中，修饰后放入data段内），约等于全局变量，在整个进程周期中，只定义和初始化一次，
 
@@ -170,9 +200,69 @@ c++提供四种类型转换的关键字    static_cast   dynamic_cast   const_ca
 
 ![9](.\img\9.png)
 
+**dynamic_cast主要用于“安全地向下转型”**
+
+```c++
+Base* base = new Derived;
+    if(Derived *der= dynamic_cast<Derived*>(base))
+    {
+        cout<<"第一种情况转换成功"<<endl;
+        der->Show();
+        cout<<endl;
+    }
+Base * base1 = new Base;
+    if(Derived *der1 = dynamic_cast<Derived*>(base1))
+    {
+        cout<<"第二种情况转换成功"<<endl;
+        der1->Show();
+    }
+    else 
+    {
+        cout<<"第二种情况转换失败"<<endl;
+    }
+//第一种情况转换成功
+//第二种情况转换失败
+```
+
+**dynamic_cast和引用类型**
+
+在前面的例子中，使用了dynamic_cast将基类指针转换为派生类指针，也可以使用dynamic_cast将基类引用转换为派生类引用。
+
+在引用上，dynamic_cast依旧是常用于“安全的向下转型”。与指针一样，引用的向下转型也可以分为两种情况，**与指针不同的是，并不存在空引用，所以引用的dynamic_cast检测失败时会抛出一个bad_cast异常：**
+
+```c++
+int main()
+{    
+    //第一种情况，转换成功
+    Derived b ;
+    Base &base1= b;
+    Derived &der1 = dynamic_cast<Derived&>(base1);
+    cout<<"第一种情况：";
+    der1.Show();
+    cout<<endl;
+
+    //第二种情况
+    Base a ;
+    Base &base = a ;
+    cout<<"第二种情况：";
+    try{
+        Derived & der = dynamic_cast<Derived&>(base);
+    }
+    catch(bad_cast)
+    {
+        cout<<"转化失败,抛出bad_cast异常"<<endl;
+    }
+    system("pause");
+}
+```
+
 ![10](.\img\10.png)
 
 ![11](.\img\11.png)
+
+reinterpret_cast 用于进行各种不同类型的指针之间、不同类型的引用之间以及指针和能容纳指针的整数类型之间的转换。转换时，执行的是逐个比特复制的操作。
+
+这种转换提供了很强的灵活性，但转换的安全性只能由程序员的细心来保证了。例如，程序员执意要把一个 int* 指针、函数指针或其他类型的指针转换成 string* 类型的指针也是可以的，至于以后用转换后的指针调用 string 类的成员函数引发错误，程序员也只能自行承担查找错误的烦琐工作：（C++ 标准不允许将函数指针转换成对象指针，但有些编译器，如 Visual Studio 2010，则支持这种转换）。
 
 ### 隐式转换
 
@@ -465,9 +555,6 @@ int main(){
 - 一旦该 unique_ptr 指针放弃对所指堆内存空间的所有权，则该空间会被立即释放回收。
 
 ```c++
-//
-// Created by 18181 on 2022/3/25.
-//
 
 #ifndef FORK_UNIQUE_PTR_H
 #define FORK_UNIQUE_PTR_H
@@ -672,7 +759,9 @@ int main(int argc, char* argv[])
 }
 ```
 
+3.atomic_compare_exchange 函数
 
+以原子方式将在内存位置具有所需的值相等的值进行比较。如果值是相同的与新值替换的内存位置。
 
 # std::thread()
 
@@ -744,9 +833,50 @@ int main(int argc, char* argv[])
        __thread使用规则：只能修饰POD类型(类似整型指针的标量，不带自定义的构造、拷贝、赋值、析构的类型，二进制内容可以任意复制memset,memcpy,且内容可以复原)，不能修饰class类型，因为无法自动调用构造函数和析构函数，可以用于修饰全局变量，函数内的静态变量，不能修饰函数的局部变量或者class的普通成员变量，且__thread变量值只能初始化为编译器常量(值在编译器就可以确定const int i=5,运行期常量是运行初始化后不再改变const int i=rand()).
 
 
-## 互斥量和临界区
+## MUTEX
 
 我们在操作系统、亦或是数据库的相关知识中已经了解过了有关并发技术的基本知识，mutex 就是其中的核心之一。 C++11 引入了 mutex 相关的类，其所有相关的函数都放在 <mutex> 头文件中。
+
+#### Mutex 系列类(四种)
+
+- std::mutex，最基本的 Mutex 类。
+- std::recursive_mutex，递归 Mutex 类。
+- std::time_mutex，定时 Mutex 类。
+- std::recursive_timed_mutex，定时递归 Mutex 类。
+
+#### Lock 类（两种）
+
+- std::lock_guard，与 Mutex RAII 相关，方便线程对互斥量上锁。
+
+- ```c++
+  explicit lock_guard(_Mutex& _Mtx) : _MyMutex(_Mtx) { // construct and lock
+          _MyMutex.lock();
+      }
+  
+  ~lock_guard() noexcept {
+      _MyMutex.unlock();
+  }
+  ```
+
+- std::unique_lock，与 Mutex RAII 相关，方便线程对互斥量上锁，但提供了更好的上锁和解锁控制。
+
+- ```c++
+  explicit unique_lock(_Mutex& _Mtx) : _Pmtx(_STD addressof(_Mtx)), _Owns(false) { // construct and lock
+      _Pmtx->lock();
+      _Owns = true;
+  }
+  ~unique_lock() noexcept {
+          if (_Owns) {
+              _Pmtx->unlock();
+          }
+      }
+  ```
+
+#### 函数
+
+- std::try_lock，尝试同时对多个互斥量上锁。
+- std::lock，可以同时对多个互斥量上锁。
+- std::call_once，如果多个线程需要同时调用某个函数，call_once 可以保证多个线程对该函数只调用一次。
 
 std::mutex 是 C++11 中最基本的 mutex 类，通过实例化 std::mutex 可以创建互斥量， 而通过其成员函数 lock() 可以进行上锁，unlock() 可以进行解锁。 但是在实际编写代码的过程中，最好不去直接调用成员函数， 因为调用成员函数就需要在每个临界区的出口处调用 unlock()，当然，还包括异常。 这时候 C++11 还为互斥量提供了一个 RAII 语法的模板类 std::lock_guard。 RAII 在不失代码简洁性的同时，很好的保证了代码的异常安全性。
 
@@ -757,15 +887,15 @@ std::mutex 是 C++11 中最基本的 mutex 类，通过实例化 std::mutex 可�
 #include <thread>
 #include<iostream>
 int v = 1;
-
+static std::mutex mtx;
 void critical_section(int change_v) {
 
-static std::mutex mtx;
+
 std::lock_guard<std::mutex> lock(mtx);
 
 // 执行竞争操作
 v = change_v;
-
+}
 // 离开此作用域后 mtx 会被释放
 int main(){
   std::thread t1(critical_section, 2), t2(critical_section, 3);
@@ -810,7 +940,7 @@ lock.unlock();
 lock.lock();
 v += 1;
 std::cout << v << std::endl;
-  
+} 
   int main(){
     std::thread t1(critical_section, 2), t2(critical_section, 3);
     t1.join();
@@ -818,7 +948,7 @@ std::cout << v << std::endl;
     return 0;
   }
 ```
-# std::future
+# std::promise||future
 
 期物（Future）表现为 `std::future`，它提供了一个访问异步操作结果的途径，这句话很不好理解。 为了理解这个特性，我们需要先理解一下在 C++11 之前的多线程行为。
 
@@ -827,8 +957,6 @@ std::cout << v << std::endl;
 在 C++11 的 `std::future` 被引入之前，通常的做法是： 创建一个线程 A，在线程 A 里启动任务 B，当准备完毕后发送一个事件，并将结果保存在全局变量中。 而主函数线程 A 里正在做其他的事情，当需要结果的时候，调用一个线程等待函数来获得执行的结果。
 
 而 C++11 提供的 `std::future` 简化了这个流程，可以用来获取异步任务的结果。 自然地，我们很容易能够想象到把它作为一种简单的线程同步手段，即屏障（barrier）。
-
-介绍std::prioise 和 std::pakaged_task:
 
 promise 对象可以保存某一类型 T 的值，该值可被 future 对象读取（可能在另外一个线程中），因此 promise 也提供了一种线程同步的手段。在 promise 对象构造时可以和一个共享状态（通常是std::future）相关联，并可以在相关联的共享状态(std::future)上保存一个类型为 T 的值。
 
@@ -862,11 +990,11 @@ int main ()
 std::packaged_task是std::promise的简化形式
 
 ```c++
-    std::packaged_task<int()> task([]{ return 7; }); // wrap the function
-    std::future<int> f1 = task.get_future();  // get a future
-    std::thread t(std::move(task)); // launch on a thread
-	t.join();
-	std::cout<<f1.get()<<std::endl;
+std::packaged_task<int()> task([]{ return 7; }); // wrap the function
+std::future<int> f1 = task.get_future();  // get a future
+std::thread t(std::move(task)); // launch on a thread
+t.join();
+std::cout<<f1.get()<<std::endl;
 ```
 
 
@@ -1042,7 +1170,7 @@ MyString& operator=(MyString&& str) noexcept{
    }
 ```
 
-移动构造函数与拷贝构造函数的区别是，拷贝构造的参数是`const MyString& str`，是*常量左值引用*，而移动构造的参数是`MyString&& str`，是*右值引用*，而`MyString("hello")`是个临时对象，是个右值，优先进入**移动构造函数**而不是拷贝构造函数。而移动构造函数与拷贝构造不同，它并不是重新分配一块新的空间，将要拷贝的对象复制过来，而是"偷"了过来，将自己的指针指向别人的资源，然后将别人的指针修改为`nullptr`，这一步很重要，如果不将别人的指针修改为空，那么临时对象析构的时候就会释放掉这个资源，"偷"也白偷了。
+移动构造函数与拷贝构造函数的区别是，拷贝构造的参数是`const MyString& str`，是*常量左值引用*，而移动构造的参数是`MyString&& str`，是*右值引用*，而`MyString("hello")`是个临时对象，是个右值，优先进入**移动构造函数**而不是拷贝构造函数。而移动构造函数与拷贝构造不同，它并不是重新分配一块新的空间，将要拷贝的对象复制过来，而是"偷"了过来，将自己的指针指向别人的资源，然后将别人的指针修改为`nullptr`，这一步很重要，如果不将别人的指针修改为空，那么临时对象析构的时候就会释放掉这个资源，"偷"也白偷了。<delete一个空指针，编译器自动忽略，什么也不会发生，苏哦一不用判断是否为空>
 
 ### move
 
@@ -1202,151 +1330,31 @@ class Child3 : Parent2 {
 
 decltype(auto)：decltype是C++11新增的关键字，主要用于提取变量和表达式的类型。
 
-# ASIO
-
-Boost.Asio is a cross-platform C++ library for network and low-level I/O programming that provides developers with a consistent asynchronous model using a modern C++ approach.
-
-## 异步回调
-
-```c++
-#include<iostream>
-#include<boost/asio.hpp>
-
-#include<boost/date_time/posix_time/posix_time.hpp>
-
-
-void print (const boost::system::error_code &){
-    std::cout<<"end"<<std::endl;
-
-}
-int 
-main(){
-    boost::asio::io_service io;
-    boost::asio::deadline_timer dead1(io,boost::posix_time::seconds(2));
-    dead1.async_wait(&print);
-    std::cout<<"hello,world1"<<std::endl;
-    io.run();
-    std::cout<<"hello,world"<<std::endl;
-}   
-```
-
-## 参数绑定
-
-```c++
-#include<iostream>
-#include<boost/asio.hpp>
-#include<boost/bind/bind.hpp>
-
-void print(const boost::system::error_code& /*e*/,
-    boost::asio::steady_timer* t, int* count)
-{
-  if (*count < 5)
-  {
-    std::cout << *count << std::endl;
-    ++(*count);
-
-    t->expires_at(t->expiry() + boost::asio::chrono::seconds(1));
-    t->async_wait(boost::bind(print,
-          boost::asio::placeholders::error, t, count));
-  }
-}
-
-int main()
-{
-  boost::asio::io_context io;
-
-  int count = 0;
-  boost::asio::steady_timer t(io, boost::asio::chrono::seconds(1));
-  t.async_wait(boost::bind(print,
-        boost::asio::placeholders::error, &t, &count));
-
-  io.run();
-
-  std::cout << "Final count is " << count << std::endl;
-
-  return 0;
-}
-```
-
-## 多线程同步
-
-```c++
-#include<iostream>
-#include<boost/asio.hpp>
-#include<boost/thread/thread.hpp>
-#include<boost/bind/bind.hpp>
-
-class printer
-{
-private:
-    boost::asio::steady_timer timer1_;
-    boost::asio::steady_timer timer2_;
-    boost::asio::strand<boost::asio::io_context::executor_type>strand_;
-    int count_;
-
-public:
-    printer(boost::asio::io_context& io)
-    : strand_(boost::asio::make_strand(io)),
-      timer1_(io, boost::asio::chrono::seconds(1)),
-      timer2_(io, boost::asio::chrono::seconds(1)),
-      count_(0)
-  {
-      
-    timer2_.async_wait(boost::asio::bind_executor(strand_,
-          boost::bind(&printer::print2, this)));
-    timer1_.async_wait(boost::asio::bind_executor(strand_,
-          boost::bind(&printer::print1, this)));
-
-  }
-
- void print1()
-  {
-    if (count_ < 10)
-    {
-      std::cout << "Timer 1: " << count_ << std::endl;
-      ++count_;
-
-      timer1_.expires_at(timer1_.expiry() + boost::asio::chrono::seconds(1));
-
-      timer1_.async_wait(boost::asio::bind_executor(strand_,
-            boost::bind(&printer::print1, this)));
-    }
-  }
-
-  void print2()
-  {
-    if (count_ < 10)
-    {
-      std::cout << "Timer 2: " << count_ << std::endl;
-      ++count_;
-
-      timer2_.expires_at(timer2_.expiry() + boost::asio::chrono::seconds(1));
-
-      timer2_.async_wait(boost::asio::bind_executor(strand_,
-            boost::bind(&printer::print2, this)));
-    }
-  }
-  
-    ~printer(){
-        std::cout << "Final count is " << count_ << std::endl;
-    }
-
-};
-
-
-int main(){
-    boost::asio::io_context io;
-    printer p(io);
-    boost::thread t(boost::bind(&boost::asio::io_context::run, &io));
-  io.run();
-  t.join();
-
-}
-```
-
-
-
 # 关键字
+
+## voilate
+
+- 保证变量的内存可见性
+- 禁止指令重排序
+
+```
+内存可见性是指当一个线程修改了某个变量的值，其它线程总是能知道这个变量变化。也就是说，如果线程 A 修改了共享变量 V 的值，那么线程 B 在使用 V 的值时，能立即读到 V 的最新值。
+保证这一点，需要加锁或使用voilate关键字
+
+因为当一个线程进入临界区代码块后，线程获取到锁，会清空本地内存，然后从主内存中拷贝共享变量的最新值到本地内存作为副本，执行代码，又将修改后的副本值刷新到主内存中，最后线程释放锁。
+
+使用 volatile 修饰共享变量后，每个线程要操作变量时会从主内存L3\L2中将变量拷贝到本地内存L1作为副本，当线程操作变量副本并写回主内存后，会通过 CPU 总线嗅探机制告知其他线程该变量副本已经失效，需要重新从主内存中读取。
+```
+
+```
+总线嗅探机制
+在现代计算机中，CPU 的速度是极高的，如果 CPU 需要存取数据时都直接与内存打交道，在存取过程中，CPU 将一直空闲，这是一种极大的浪费，所以，为了提高处理速度，CPU 不直接和内存进行通信，而是在 CPU 与内存之间加入很多寄存器，多级缓存，它们比内存的存取速度高得多，这样就解决了 CPU 运算速度和内存读取速度不一致问题。
+
+由于 CPU 与内存之间加入了缓存，在进行数据操作时，先将数据从内存拷贝到缓存中，CPU 直接操作的是缓存中的数据。但在多处理器下，将可能导致各自的缓存数据不一致（这也是可见性问题的由来），为了保证各个处理器的缓存是一致的，就会实现缓存一致性协议，而嗅探是实现缓存一致性的常见机制。
+每个处理器通过监听在总线上传播的数据来检查自己的缓存值是不是过期了，如果处理器发现自己缓存行对应的内存地址修改，就会将当前处理器的缓存行设置无效状态，当处理器对这个数据进行修改操作的时候，会重新从主内存中把数据读到处理器缓存中。
+```
+
+
 
 ## constexpr
 
@@ -1399,7 +1407,7 @@ public:
 };
 ```
 
-- **别名指定**
+- **别名指定**==typedef
 
 ```cpp
 using value_type = _Ty
@@ -1416,7 +1424,34 @@ void* malloc(size_t size)
 void* free(void* pointer)
 ```
 
+**malloc返回值**：当malloc分配内存时它除了分配我们指定SIZE的内存块，还会分配额外的内存来存储我们的内存块信息，用于维护该内存块。因此，malloc(0)返回一个合法的指针并指向存储内存块信息的额外内存，我们当然可以在该内存上进行读写操作，但是这样做了会破坏该内存块的维护信息，因此当我们调用free(ptr)时就会出现错误
 
+malloc 函数其实就是在内存中：找一片指定大小的空间，然后将这个空间的首地址给一个指针变量，这里的指针变量可以是一个单独的指针，也可以是一个数组的首地址， 这要看malloc函数中参数size的具体内容。我们这里malloc分配的内存空间在逻辑上是连续的，而在物理上可以不连续。我们作为程序员，关注的 是逻辑上的连续，其它的，操作系统会帮着我们处理的。
+
+下面是Linux 操作系统默认的Ptmalloc的malloc()后执行malloc_usable_size()的返回结果，可以看到每个内存申请都多分配了几个字节
+
+```text
+Log: check_malloc_size() malloc_size=8, malloc_usable_size=24
+Log: check_malloc_size() malloc_size=16, malloc_usable_size=24
+Log: check_malloc_size() malloc_size=24, malloc_usable_size=24
+Log: check_malloc_size() malloc_size=16, malloc_usable_size=24
+Log: check_malloc_size() malloc_size=32, malloc_usable_size=40
+Log: check_malloc_size() malloc_size=48, malloc_usable_size=56
+Log: check_malloc_size() malloc_size=64, malloc_usable_size=72
+Log: check_malloc_size() malloc_size=80, malloc_usable_size=88
+Log: check_malloc_size() malloc_size=96, malloc_usable_size=104
+Log: check_malloc_size() malloc_size=112, malloc_usable_size=120
+Log: check_malloc_size() malloc_size=128, malloc_usable_size=136
+Log: check_malloc_size() malloc_size=144, malloc_usable_size=152
+Log: check_malloc_size() malloc_size=160, malloc_usable_size=168
+Log: check_malloc_size() malloc_size=176, malloc_usable_size=184
+Log: check_malloc_size() malloc_size=192, malloc_usable_size=200
+Log: check_malloc_size() malloc_size=208, malloc_usable_size=216
+Log: check_malloc_size() malloc_size=224, malloc_usable_size=232
+Log: check_malloc_size() malloc_size=240, malloc_usable_size=248
+```
+
+![](./img/malloc.jpg)
 
 - new\delete是C++的**操作运算符**
 
@@ -1457,13 +1492,42 @@ new 操作符的执行过程：
 
 operator new就像operator + 一样，是可以重载的。如果类中没有重载operator new，那么调用的就是全局的::operator new来完成堆的分配。同理，operator new[]、operator delete、operator delete[]也是可以重载的。
 
+## placement new
+
+一般来说，使用new申请空间时，是从系统的“堆”（heap）中分配空间。申请所得的空间的位置是根据当时的内存的实际使用情况决定的。但是，在某些特殊情况下，可能需要在已分配的特定内存创建对象，这就是所谓的“定位放置new”（placement new）操作。
+
+```c++
+1. 缓冲区提前分配
+
+可以使用堆的空间，也可以使用栈的空间，所以分配方式有如下两种：
+
+class MyClass {…};
+char *buf=new char[N*sizeof(MyClass)+ sizeof(int)] 或者 char buf[N*sizeof(MyClass)+ sizeof(int)];
+
+2. 对象的构造
+
+MyClass * pClass=new(buf) MyClass;
+
+3. 对象的销毁
+
+一旦这个对象使用完毕，你必须显式的调用类的析构函数进行销毁对象。但此时内存空间不会被释放，以便其他的对象的构造。
+
+pClass->~MyClass();
+
+4. 内存的释放
+
+如果缓冲区在堆中，那么调用delete[] buf;进行内存的释放；如果在栈中，那么在其作用域内有效，跳出作用域，内存自动释放。
+```
+
+ 
+
 ## inline
 
 ```
 类内定义的函数自动内联
 ```
 
-
+虚函数其实是可以内联的，当虚函数不表现多态性，可以内联，但是当使用指针调用时，这是一个运行时多态，不可以内联
 
 用在函数定义前，将函数指定为内联，在运行到内联函数时，不发生函数调用，也就没有了调用的开销（省去了参数压栈、生成汇编语言的CALL调用、返回参数、执行return等过程）
 
@@ -1697,6 +1761,18 @@ int main()
 多态：同一事物表现出不同事物的能力，即向不同对象发送同一消息，不同的对象在接收时会产生不同的行为（重载实现编译时多态，虚函数实现运行时多态）。多态的目的则是为了接口重用
 ```
 
+## C与C++的区别，面试用
+
+```
+1.C面向过程，c++面向对象，c是结构化语言，它的重点在于算法和数据结构，C++，首要考虑的是如何构造一个对象模型，让这个模型能够配合对应的问题，这样就可以通过获取对象的状态信息得到输出或实现过程控制。
+
+2.struct和class，最本质的一个区别就是默认的访问控制，truct是public的，class是private的。
+
+3.动态内存管理。 C语言通过malloc和free来分配和释放堆内存，C++通过new和delete来管理。new / malloc有什么区别？ delete/free有什么区别？ 等待考官继续问你。
+
+4.此外，C的强制类型转换也不同。C的强制类型转换使⽤ (type) 类型强制转换。C++有四种static_cast\dynamic_cast\const_cast\reinterpret_cast,等面试官继续文，如果你不懂这四种的使用场景，我劝你最好不要说这条
+```
+
 
 
 ## 指针和引用
@@ -1704,12 +1780,30 @@ int main()
 ```
 (1)指针是一个变量，存储的是一个地址，指向内存的一个存储单元；引用跟原来的变量实质上是同一个东西，是原变量的一个别名
 (2)可以有const指针，但是没有const引用
-(3)指针可以有多级，但是引用只能是一级（int **p；合法 而 int &&a是不合法的）
+(3)指针可以有多级，但是引用只能是一级（int **p；合法 而 int &&a是不合法的）->在模板中可以，借助引用折叠，当我们间接创建一个引用的引用，这些引用形成了“折叠”
 (4)指针的值可以为空，但是引用的值不能为NULL，引用在定义的时候必须初始化；
 (5)指针的值在初始化后可以改变，即指向其它的存储单元，而引用在进行初始化后就不会再改变了。
 (6)"sizeof引用"得到的是所指向的变量(对象)的大小，而"sizeof指针"得到的是指针本身的大小；
 (7)指针和引用的自增(++)运算意义不一样；
 ```
+
+## 野指针（悬垂指针
+
+野指针的定义：“野指针”不是NULL指针，是指向“垃圾”内存的指针。if无法判断一个指针是正常指针还是“野指针”。
+
+**产生原因：**
+
+1. 指针定义时未被初始化：指针在被定义的时候，如果程序不对其进行初始化的话，它会随机指向一个区域，因为任意指针变量（出了static修饰的指针）它的默认值都是随机的
+2. 指针被释放时没有置空：我们在用malloc（）开辟空间的时候，要检查返回值是否为空，如果为空，则开辟失败；如果不为空，则指针指向的是开辟的内存空间的首地址。指针指向的内存空间在用free()和delete释放后，如果程序员没有对其进行置空或者其他赋值操作的话，就会成为一个野指针
+3. 指针操作超越变量作用域：不要返回指向栈内存的指针或者引用，因为栈内存在函数结束的时候会被释放。
+  
+
+**危害：**指针指向的内容已经无效了，而指针没有被置空，解引用一个非空的无效指针是一个未被定义的行为，也就是说不一定导致错误，野指针被定位到是哪里出现问题，在哪里指针就失效了，不好查找错误的原因。
+
+规避方法：
+
+1. 初始化指针的时候将其置为nullptr，之后对其操作。
+2. 释放指针的时候将其置为nullptr。
 
 ## 循环和递归
 
@@ -1828,7 +1922,7 @@ int main()
 ```c++
 int main()
 {
-	int a = 0x12345678;
+	int a = 0x00000008;
 	char* b = (char*)&a;
 	if(*b)
 		cout<<"小端"<<endl;
