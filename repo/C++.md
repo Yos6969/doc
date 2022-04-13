@@ -428,6 +428,7 @@ shared_ptr使用引用计数，每一个shared_ptr的拷贝都指向相同的内
 - *当对象作为另一对象的副本而创建时，拷贝构造函数拷贝指针并增加与之相应的引用计数*
 - 对一个对象进行赋值时，赋值操作符减少左操作数所指对象的引用计数（如果引用计数为减至0，则删除对象），并增加右操作数所指对象的引用计数；这是因为左侧的指针指向了右侧指针所指向的对象，因此右指针所指向的对象的引用计数加1
 - 调用析构函数时，减少引用计数，如果引用计数减至0，则删除基础对象和引用计数对象
+- 为什么计数是int*指针而不是member变量：需要维护一个所有shared_ptr可访问的内存
 
 ```c++
 //
@@ -839,10 +840,53 @@ int main(int argc, char* argv[])
 
 #### Mutex 系列类(四种)
 
-- std::mutex，最基本的 Mutex 类。
+- std::mutex，最基本的 Mutex 类，互斥锁。
 - std::recursive_mutex，递归 Mutex 类。
 - std::time_mutex，定时 Mutex 类。
 - std::recursive_timed_mutex，定时递归 Mutex 类。
+
+自旋锁封装，c++没有提供，自己写
+
+```c++
+#ifndef SPINLOCK
+#defind SPINLOCK
+#include<atomic>
+
+class spin_lock
+{
+private:
+
+    std::atomic_flag _atomic;
+
+public:
+
+    spin_lock() noexcept;
+    void lock() noexcept;
+    void unlock() noexcept;
+    bool try_lock() noexcept;
+};
+
+spin_lock::spin_lock() noexcept :
+    _atomic(ATOMIC_FLAG_INIT) {}
+
+void spin_lock::lock() noexcept
+{
+    while (_atomic.test_and_set(std::memory_order_acquire));
+}
+
+void spin_lock::unlock() noexcept
+{
+    _atomic.clear(std::memory_order_release);
+}
+
+bool spin_lock::try_lock() noexcept
+{
+    return _atomic.test() ? false : (_atomic.test_and_set(std::memory_order_acquire));
+}
+#endif
+```
+
+
 
 #### Lock 类（两种）
 
@@ -1335,7 +1379,12 @@ decltype(auto)：decltype是C++11新增的关键字，主要用于提取变量�
 ## voilate
 
 - 保证变量的内存可见性
+
 - 禁止指令重排序
+
+- ### **1.1 可见性**
+
+  概念：当多个线程访问同一个变量时，一个线程修改了这个变量的值，其他线程能够立即看到修改的值
 
 ```
 内存可见性是指当一个线程修改了某个变量的值，其它线程总是能知道这个变量变化。也就是说，如果线程 A 修改了共享变量 V 的值，那么线程 B 在使用 V 的值时，能立即读到 V 的最新值。

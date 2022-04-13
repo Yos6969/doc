@@ -140,6 +140,30 @@ int main(){
 }
 ```
 
+# 计时器
+
+```c++
+#include <chrono> 
+auto t1 = chrono::steady_clock::now();
+......
+auto t2 = chrono::steady_clock::now();
+auto t = chrono::duration_cast<chrono::milliseconds>(t2 - t1);
+cout << "time cost:" << t.count() << " 毫秒" << endl;
+
+```
+
+# 线程休眠
+
+```c++
+std::chrono::nanoseconds
+std::chrono::microseconds
+std::chrono::milliseconds
+std::chrono::seconds
+std::chrono::minutes
+std::chrono::hours
+std::this_thread::sleep_for(std::chrono::milliseconds(100));
+```
+
 
 
 #杂项
@@ -157,29 +181,28 @@ int main(){
 
        答案是不能，因为这样会造成2个非共享的share_ptr指向同一个对象，未增加引用计数导对象被析构两次。例如：
 
-```
-include <memory>
-
-include <iostream>
-
+```c++
+#include <memory>
+#include <iostream>
+using namespace std;
 class Bad
 {
 public:
-	std::shared_ptr<Bad> getptr() {
-		return std::shared_ptr<Bad>(this);
-	}
-	~Bad() { std::cout << "Bad::~Bad() called" << std::endl; }
+    std::shared_ptr<Bad> getptr() {
+        //return std::shared_ptr<Bad>(this);  // 错误的示例，每个shared_ptr都认为自己是对象仅有的所有者,引用计数都为1;
+        return std::shared_ptr<Bad>(this);
+    }
+    ~Bad() { std::cout << "Bad::~Bad() called" << std::endl; }
 };
 
 int main()
 {
-	// 错误的示例，每个shared_ptr都认为自己是对象仅有的所有者
-	std::shared_ptr<Bad> bp1(new Bad());
-	std::shared_ptr<Bad> bp2 = bp1->getptr();
-	// 打印bp1和bp2的引用计数
-	std::cout << "bp1.use_count() = " << bp1.use_count() << std::endl;
-	std::cout << "bp2.use_count() = " << bp2.use_count() << std::endl;
-}  // Bad 对象将会被删除两次
-
+    // 错误的示例，每个shared_ptr都认为自己是对象仅有的所有者;
+    std::shared_ptr<Bad> bp1(new Bad());
+    std::shared_ptr<Bad> bp2 = bp1->getptr();
+    // 打印bp1和bp2的引用计数;
+    std::cout << "bp1.use_count() = " << bp1.use_count() << std::endl;
+    std::cout << "bp2.use_count() = " << bp2.use_count() << std::endl;
+}  // Bad 对象将会被删除两次;
 ```
 
