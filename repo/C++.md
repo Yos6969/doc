@@ -833,8 +833,7 @@ int main(int argc, char* argv[])
 
        __thread使用规则：只能修饰POD类型(类似整型指针的标量，不带自定义的构造、拷贝、赋值、析构的类型，二进制内容可以任意复制memset,memcpy,且内容可以复原)，不能修饰class类型，因为无法自动调用构造函数和析构函数，可以用于修饰全局变量，函数内的静态变量，不能修饰函数的局部变量或者class的普通成员变量，且__thread变量值只能初始化为编译器常量(值在编译器就可以确定const int i=5,运行期常量是运行初始化后不再改变const int i=rand()).
 
-
-## MUTEX
+#MUTEX
 
 我们在操作系统、亦或是数据库的相关知识中已经了解过了有关并发技术的基本知识，mutex 就是其中的核心之一。 C++11 引入了 mutex 相关的类，其所有相关的函数都放在 <mutex> 头文件中。
 
@@ -992,6 +991,20 @@ std::cout << v << std::endl;
     return 0;
   }
 ```
+# std::condition_variable
+
+  当std::condition_variable对象的某个wait函数被调用的时候，它使用std::unique_lock(通过std::mutex) 来锁住当前线程。当前线程会一直被阻塞，直到另外一个线程在相同的std::condition_variable对象上调用了notification函数来唤醒当前线程。
+
+condition_variable成员函数：
+
+condition_variable： 不可拷贝不可赋值；
+notify_one()：唤醒一个等待的线程；
+notify_all()：唤醒所有等待的线程；
+wait()：阻塞等待直到被唤醒；
+wait_for()：阻塞等待被唤醒，或者超时；
+wait_until()：阻塞等待被唤醒，或者到某个时间点。
+
+
 # std::promise||future
 
 期物（Future）表现为 `std::future`，它提供了一个访问异步操作结果的途径，这句话很不好理解。 为了理解这个特性，我们需要先理解一下在 C++11 之前的多线程行为。
