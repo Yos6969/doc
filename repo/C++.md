@@ -135,6 +135,17 @@ virtual =0 关键字说明这是一个纯虚函数，需要在子类去实现它
 
 ![5](.\img\5.png)
 
+## 子类父类相互赋值
+
+当一个基类被初始化为一个子类时，子类会被切割，以塞入较小的父类内存中，多态将不再呈现
+
+```c++
+Deriver der;
+Base t = der;
+```
+
+当一个子类被父类初始化时，编译器会报错
+
 ## 父类构造函数不可以是虚函数
 
 当类中声明虚函数时，编译器会在类中生成一个虚函数表，虚函数表是一个存储成员函数指针的数据结构。
@@ -168,7 +179,8 @@ static
   - 编译时初始化--静态变量是基本数据类型，且是个常值，是这样的
   - 加载时初始化--1.静态变量是一个基本数据类型，但是初始值非常量  2.静态变量是一个类对象
   - 运行时初始化--初始化发生在变量第一次被引用，对于局部静态对象是这样的 
-
+  - Global objects的内存保证会在程序激活的时候清零，Local objects 位于堆栈中，head objects配置于自由空间中，都不一定会被清零，他们的内容时上次使用后的遗迹
+  
 - static修饰函数，修饰函数时，表示该函数的作用域时源文件，其他文件无法调用该函数，一般用作某文件的内部函数使用
 
 - static修饰类成员变量：这个变量在所有这个类的对象间共享
@@ -1414,6 +1426,87 @@ decltype(auto)：decltype是C++11新增的关键字，主要用于提取变量�
 
 由于 CPU 与内存之间加入了缓存，在进行数据操作时，先将数据从内存拷贝到缓存中，CPU 直接操作的是缓存中的数据。但在多处理器下，将可能导致各自的缓存数据不一致（这也是可见性问题的由来），为了保证各个处理器的缓存是一致的，就会实现缓存一致性协议，而嗅探是实现缓存一致性的常见机制。
 每个处理器通过监听在总线上传播的数据来检查自己的缓存值是不是过期了，如果处理器发现自己缓存行对应的内存地址修改，就会将当前处理器的缓存行设置无效状态，当处理器对这个数据进行修改操作的时候，会重新从主内存中把数据读到处理器缓存中。
+```
+
+## union
+
+```c++
+#include <iostream>
+ 
+using namespace std;
+ 
+union StateMachine {
+    public:
+    char character;
+    int number;
+    char *str;
+    StateMachine(char c) {
+        character = c;
+    }
+    StateMachine(int n) {
+        number = n;
+    }
+    StateMachine(char* s) {
+        str = s;
+    }
+};
+ 
+enum State {character, number, str};
+int main() {
+    State state = character;
+    StateMachine machine('J');
+    ...
+    if(state == character)
+    cout << machine.character << endl;
+    ...
+    return 0;
+}
+```
+
+## tuple
+
+```c++
+// tuple_size
+#include <iostream>     // std::cout
+#include <tuple>        // std::tuple, std::tuple_size
+ 
+int main ()
+{
+  std::tuple<int, char, double> mytuple (10, 'a', 3.14);
+ 
+  std::cout << "mytuple has ";
+  std::cout << std::tuple_size<decltype(mytuple)>::value;
+  std::cout << " elements." << '\n';
+ 
+  //获取元素
+  std::cout << "the elements is: ";
+  std::cout << std::get<0>(mytuple) << " ";
+  std::cout << std::get<1>(mytuple) << " ";
+  std::cout << std::get<2>(mytuple) << " ";
+ 
+  std::cout << '\n';
+ 
+  return 0;
+}
+ 
+//输出结果：
+mytuple has 3 elements.
+the elements is: 10 a 3.14 
+```
+
+```c++
+std::tuple<std::string, int> tp("Sven", 20);
+ 
+// 得到第二个元素类型
+ 
+std::tuple_element<1, decltype(tp)>::type ages;  // ages就为int类型
+ 
+ages = std::get<1>(tp);
+ 
+std::cout << "ages: " << ages << '\n';
+ 
+//输出结果： 
+ages: 20
 ```
 
 

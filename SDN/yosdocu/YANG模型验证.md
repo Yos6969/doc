@@ -12,7 +12,7 @@
 
 [Netopeer2](https://github.com/CESNET/Netopeer2)
 
-- 使用OpenDayLight框架
+- 使用OpenDayLight框架，没弄明白
 
 #实施
 
@@ -110,3 +110,71 @@ yang+xml转json
 yanglint    --format=json  --type=config  --output=data.json ./ietf-yang-push@2019-09-09.yang ./data.xml
 ```
 
+
+
+```bash
+netopeer2-cli #启动客户端
+netopeer2-server -v2 -d #启动服务器 -d打印输出 -v2 输出所有信息
+[INF]: LY: Loading schema from "/home/yos114514/netopeer2-2.1.16/sysrepo/build/repository/yang/sysrepo-monitoring@2021-07-29.yang" file.
+[INF]: LY: Implemented module "ietf-datastores@2018-02-14" is not used for import, revision "2018-02-14" is imported instead.
+[INF]: LY: Searching for "sysrepo-plugind" in "/home/yos114514/netopeer2-2.1.16/sysrepo/build/repository/yang".
+
+#客户端连接
+connect  # localhost 830
+[INF]: LN: Received an SSH message "request-service" of subtype "ssh-userauth".
+[INF]: LN: Received an SSH message "request-auth" of subtype "none".
+[INF]: LN: Received an SSH message "request-auth" of subtype "interactive".
+
+
+客户端支持 get get-config edit-config操作
+subscribe 此操作启动一个事件通知订阅，该订阅
+      将向发起者发送异步事件通知
+      命令直到订阅终止。
+```
+
+
+
+### sysrepo
+
+多数linux的应用程序需要有配置，配置文件的保存和读写通常的实现方式是通过操作文件来完成的。各应用程序都自定配置文件的格式，格式风格存在诸多差异。
+
+Sysrepo是一个基于YANG模型的配置和操作数据库，为应用程序提供一致的操作数据的接口，解决了配置读写困难的问题。应用程序使用YANG模型来建模，这样就可以利用YANG模型完成数据合法性的检查，保证的风格的一致，不需要应用程序直接操作配置文件了。
+
+
+SYSREPO数据库它提供了以下特性:
+
+- 模型配置文件和状态数据的集中存储
+- 应用程序可以通过XPATH访问配置
+- 支持启动、运行和临时数据存储
+- 支持事务，符合ACID
+- 根据YANG模型，进行数据一致性和约束的检查
+- 没有单一故障点，应用程序不需要运行任何其他进程来访问其配置
+
+```
+sysrepoctl -l #查看已安装的模块
+```
+
+
+
+## 客户端连接测试
+
+使用NETCONFc--需付费
+
+- 轻松浏览和编辑服务器配置
+- 通过指向和单击自动生成 NETCONF <get>、<get-config> 和 <edit-config>
+- 支持所有IETF YANG模块，如RFC6021、RFC6022、RFC6536等。
+- 处理供应商定义的所有兼容的专有 YANG 模块
+- 自动生成所有 IETF 标准 NETCONF 操作
+- 自动生成 IETF 标准跟踪 YANG 模块中定义的所有标准 RPC 
+- 在供应商的私有模块中自动生成所有用户定义的 RPC
+- NETCONF 1.1 (RFC6241) 和 NETCONF 1.0 (RFC4741) 
+- NETCONF over Secure Shell (SSH, RFC6242)
+- TLS 上的 ETCONF（RFC5539 和 RFC7589）
+- NETCONF 回拨支持 (RFC8071)
+- RESTCONF (RFC8040)
+- YANG 1.0 (RFC6020) 和 YANG 1.1 (RFC7950)
+- NETCONF 的默认功能 (RFC 6243)
+- NETCONF 的部分锁定远程过程调用 (RFC 6022)
+- NETCONF 事件通知（RFC 5277 和 RFC 6470）
+
+   支持的操作系统：Microsoft Windows、MacOS、Linux
