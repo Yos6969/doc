@@ -154,27 +154,40 @@ SYSREPO数据库它提供了以下特性:
 sysrepoctl -l #查看已安装的模块
 ```
 
+订阅实际上就是回调函数。
+例如我们的程序告诉sysrepo，我们要订阅/net/eth0/ip这个xml地址，当有人发消息给sysrepo，写这个路径时，sysrepo就会告诉我们这个xml发生变化了，我们就执行实际的操作。
+
+ sysrepoctl is a command-line tool for manipulation of YANG schemas in sys‐
+       repo. It can list the currently installed schemas and add, remove, or mod‐
+       ify them.
+
+
+
+```
+sudo sysrepoctl -i xxx.yang #安装yang模块
+```
+
 
 
 ## 客户端连接测试
 
-使用NETCONFc--需付费
+使用YumaBench--图形netconfig客户端
 
-- 轻松浏览和编辑服务器配置
-- 通过指向和单击自动生成 NETCONF <get>、<get-config> 和 <edit-config>
-- 支持所有IETF YANG模块，如RFC6021、RFC6022、RFC6536等。
-- 处理供应商定义的所有兼容的专有 YANG 模块
-- 自动生成所有 IETF 标准 NETCONF 操作
-- 自动生成 IETF 标准跟踪 YANG 模块中定义的所有标准 RPC 
-- 在供应商的私有模块中自动生成所有用户定义的 RPC
-- NETCONF 1.1 (RFC6241) 和 NETCONF 1.0 (RFC4741) 
-- NETCONF over Secure Shell (SSH, RFC6242)
-- TLS 上的 ETCONF（RFC5539 和 RFC7589）
-- NETCONF 回拨支持 (RFC8071)
-- RESTCONF (RFC8040)
-- YANG 1.0 (RFC6020) 和 YANG 1.1 (RFC7950)
-- NETCONF 的默认功能 (RFC 6243)
-- NETCONF 的部分锁定远程过程调用 (RFC 6022)
-- NETCONF 事件通知（RFC 5277 和 RFC 6470）
+- 基于 yangcli-pro 客户端，包括命令行功能、帮助和补全
+- NETCONF over SSH/TLS 密码和证书认证
+- 服务器 YANG 数据动态显示，适应：
+  - 杨对象
+  - 可选功能
+  - 增强
+  - 偏差
+- 放大大型 YANG 数据树以创建您需要的特定视图
+- 通过搜索对象和数据找到“大海捞针”
+- 可定制的 YANG 对象着色以优化识别
+- 无需xml
+- 过滤视图
 
-   支持的操作系统：Microsoft Windows、MacOS、Linux
+```bash
+ssh-copy-id yos114514@10.112.3.211 -p14942 #拷贝公钥至服务器
+```
+
+![yumbench](.\img\yumbench.png)
