@@ -63,37 +63,34 @@ dp[i][j] = max(dp[i-1][j],dp[i-1][j-k*A[i]] + k*V[i])
 可以转换为 0 1 背包，只要把完全背包多出来的件数等价于一件新的物品就行
 
 ```c++
-if    vector<int> V={30,50,100,200};
+    vector<int> V={30,50,100,200};
     vector<int> A={2,3,4,5};
 
 
     vector<vector<int>> dp(V.size()+1, vector<int>(9));
-
-    for (int i =1 ; i<dp.size(); i++)
+	//vector<vector<int>> chose(dp.size(),vector<int>(V.size()));//背包溯源
+    for (int i =1 ; i<=V.size(); i++)
     {
         for (int j =0 ; j <dp[0].size(); j++)
         {
             for(int k =0 ; k *A[i-1] <= j;k++) { 
-                if (j - k*A[i-1] >= 0) {
-                    dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - k*A[i-1]] + k*V[i-1]);
-                }
-            }
-        }
-    }
-//优化空间
-	vector<int> dp(9);
-    for (int i =1 ; i<=V.size(); i++)
-    {
-        for (int j =0 ; j <dp.size(); j++)
-        {
-            for(int k = 0 ; k *A[i-1] <= j;k++) { 
-                if (j - k*A[i-1] >= 0) {
-                    dp[j] = max(dp[j], dp[j - k*A[i-1]] + k*V[i-1]);
-                }
+                dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - k*A[i-1]] + k*V[i-1]);
+                //int flag = dp[j - k*A[i-1]] + k*V[i-1]; //背包溯源
+                 //if (flag != dp[j])
+                //{
+                  //chose[j] = chose[j - k*A[i-1]];
+                //}
+                //else
+                //{
+                    //chose[j] = chose[j - k*A[i-1]];
+                   // chose[j][i-1] +=k;
+               // }
             }
         }
     }
 ```
+
+
 
 
 
