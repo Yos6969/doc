@@ -801,7 +801,9 @@ int main(int argc, char* argv[])
 
 以原子方式将在内存位置具有所需的值相等的值进行比较。如果值是相同的与新值替换的内存位置。
 
-# std::thread()
+#C++多线程
+
+##std::thread()
 
 - 默认构造函数，创建一个空的 `std::thread` 执行对象。
 - 初始化构造函数，创建一个 `std::thread` 对象，该 `std::thread` 对象可被 `joinable`，新产生的线程会调用 `fn` 函数，该函数的参数由 `args` 给出。
@@ -870,7 +872,7 @@ int main(int argc, char* argv[])
 
        __thread使用规则：只能修饰POD类型(类似整型指针的标量，不带自定义的构造、拷贝、赋值、析构的类型，二进制内容可以任意复制memset,memcpy,且内容可以复原)，不能修饰class类型，因为无法自动调用构造函数和析构函数，可以用于修饰全局变量，函数内的静态变量，不能修饰函数的局部变量或者class的普通成员变量，且__thread变量值只能初始化为编译器常量(值在编译器就可以确定const int i=5,运行期常量是运行初始化后不再改变const int i=rand()).
 
-#MUTEX
+##MUTEX
 
 我们在操作系统、亦或是数据库的相关知识中已经了解过了有关并发技术的基本知识，mutex 就是其中的核心之一。 C++11 引入了 mutex 相关的类，其所有相关的函数都放在 <mutex> 头文件中。
 
@@ -1028,9 +1030,9 @@ std::cout << v << std::endl;
     return 0;
   }
 ```
-# std::condition_variable
+##std::condition_variable
 
-  当std::condition_variable对象的某个wait函数被调用的时候，它使用std::unique_lock(通过std::mutex) 来锁住当前线程。当前线程会一直被阻塞，直到另外一个线程在相同的std::condition_variable对象上调用了notification函数来唤醒当前线程。
+当std::condition_variable对象的某个wait函数被调用的时候，它使用std::unique_lock(通过std::mutex) 来锁住当前线程。当前线程会一直被阻塞，直到另外一个线程在相同的std::condition_variable对象上调用了notification函数来唤醒当前线程。
 
 condition_variable成员函数：
 
@@ -1041,8 +1043,54 @@ wait()：阻塞等待直到被唤醒；
 wait_for()：阻塞等待被唤醒，或者超时；
 wait_until()：阻塞等待被唤醒，或者到某个时间点。
 
+```c++
+#include <iostream>                // std::cout
+#include <thread>                // std::thread
+#include <mutex>                // std::mutex, std::unique_lock
+#include <condition_variable>    // std::condition_variable
 
-# std::promise||future
+std::mutex mtx; // 全局互斥锁.
+std::condition_variable cv; // 全局条件变量.
+bool ready = false; // 全局标志位.
+
+void do_print_id(int id)
+{
+    std::unique_lock <std::mutex> lck(mtx);
+    while (!ready) // 如果标志位不为 true, 则等待...
+        cv.wait(lck); // 当前线程被阻塞, 当全局标志位变为 true 之后,
+    // 线程被唤醒, 继续往下执行打印线程编号id.
+    std::cout << "thread " << id << '\n';
+}
+
+void go()
+{
+    std::unique_lock <std::mutex> lck(mtx);
+    ready = true; // 设置全局标志位为 true.
+    cv.notify_all(); // 唤醒所有线程.
+}
+
+int main()
+{
+    std::thread threads[10];
+    // spawn 10 threads:
+    for (int i = 0; i < 10; ++i)
+        threads[i] = std::thread(do_print_id, i);
+
+    std::cout << "10 threads ready to race...\n";
+    go(); // go!
+
+  for (auto & th:threads)
+        th.join();
+
+    return 0;
+}
+```
+
+
+
+##std::promise||future
+
+![](./img/800081-20190815205102578-1377096594.png)
 
 期物（Future）表现为 `std::future`，它提供了一个访问异步操作结果的途径，这句话很不好理解。 为了理解这个特性，我们需要先理解一下在 C++11 之前的多线程行为。
 
@@ -1089,6 +1137,106 @@ std::future<int> f1 = task.get_future();  // get a future
 std::thread t(std::move(task)); // launch on a thread
 t.join();
 std::cout<<f1.get()<<std::endl;
+```
+
+## std::async
+
+async（高级封装future和thread)
+
+std::future可以从异步任务中获取结果，一般与std::async配合使用，std::async用于创建异步任务，实际上就是创建一个线程执行相应任务。
+
+std::async就是异步编程的高级封装，封装了std::future的操作，基本上可以代替std::thread 的所有事情。
+
+std::async的操作，其实相当于封装了std::promise、std::packaged_task加上std::thread。
+
+```c++
+/** @file  futureIsPrime.cpp
+*  @note   
+*  @brief
+*  @author 
+*  @date   2019-8-15
+*  @note   
+*  @history
+*  @warning
+*/
+// future example
+#include <iostream>       // std::cout
+#include <future>         // std::async, std::future
+#include <chrono>         // std::chrono::milliseconds
+
+// a non-optimized way of checking for prime numbers:
+bool is_prime (int x) {
+  for (int i=2; i<x; ++i) if (x%i==0) return false;
+  return true;
+}
+
+int main ()
+{
+  // call function asynchronously:
+  std::future<bool> fut = std::async (is_prime,444444443);
+
+  // do something while waiting for function to set future:
+  std::cout << "checking, please wait";
+  std::chrono::milliseconds span (100);
+  while (fut.wait_for(span)==std::future_status::timeout)
+    std::cout << '.' << std::flush;
+
+  bool x = fut.get();     // retrieve return value
+
+  std::cout << "\n444444443 " << (x?"is":"is not") << " prime.\n";
+
+  return 0;
+}
+```
+
+## 生产消费者
+
+```c++
+#include "iostream"
+#include <vector>
+#include <queue>
+#include <memory>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <future>
+#include <functional>
+#include <stdexcept>
+bool ready = false;
+std::mutex mtx;
+std::condition_variable cv,cv1;
+int cargo = 0;
+
+
+void consumer () {
+    while(true) {
+        std::unique_lock<std::mutex> lck(mtx);
+        while (cargo == 0)
+            cv.wait(lck);
+        cargo = 0;
+        std::cout << "consumed" << std::endl;
+        cv1.notify_one();
+    }
+}
+
+void producer () {
+    while (true) {
+        std::unique_lock<std::mutex> lck(mtx);
+        while (cargo != 0) cv1.wait(lck);
+        cargo = 1;
+        std::cout << "produced" << std::endl;
+        cv.notify_one();
+    }
+}
+
+int main()
+{
+    std::thread t1 = std::thread(producer);
+    std::thread t2 = std::thread(consumer);
+
+    t1.join();
+    t2.join();
+}
 ```
 
 

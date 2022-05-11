@@ -85,6 +85,8 @@ gdb [exec file] [core file]
 
 # 借助工具查看内存泄漏
 
+##sanitize addresser
+
 环境：Ubuntu 16.04  gcc 4.8以上
 用-fsanitize=address选项编译和链接你的程序;
 用-fno-omit-frame-pointer编译，以在错误消息中添加更好的堆栈跟踪。
@@ -99,3 +101,12 @@ gdb [exec file] [core file]
 ![image-20220330112710901](.\img\image-20220330112710901.png)
 
 ![img](.\img\leakall.png)
+
+## valgrind
+
+```
+valgrind a.out
+#不需要重新编译，直接可以运行，比sanaddress慢得多
+```
+
+![image-20220429170515676](.\img\image-20220429170515676.png)
