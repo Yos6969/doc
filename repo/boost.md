@@ -186,12 +186,12 @@ std::this_thread::sleep_for(std::chrono::milliseconds(100));
 #include <memory>
 #include <iostream>
 using namespace std;
-class Bad
+class Bad : public std::enable_shared_from_this<Bad>
 {
 public:
     std::shared_ptr<Bad> getptr() {
         //return std::shared_ptr<Bad>(this);  // 错误的示例，每个shared_ptr都认为自己是对象仅有的所有者,引用计数都为1;
-        return std::shared_ptr<Bad>(this);
+        return shared_from_this();;
     }
     ~Bad() { std::cout << "Bad::~Bad() called" << std::endl; }
 };

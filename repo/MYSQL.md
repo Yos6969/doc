@@ -116,7 +116,7 @@ Having 是一个过滤声明，是在查询返回结果集以后对查询结果�
 select goods_category_id , avg(goods_price) as ag from sw_goods where ag>1000 group by goods_category //报错！！因为from sw_goods 这张数据表里面没有ag这个字段
 ```
 
-where和having的区别
+where和having的区别（where过滤行， having过滤分组）
 
 ```c++
 where表示条件如果条件里有 sum avg等集合函数 需要使用 having
