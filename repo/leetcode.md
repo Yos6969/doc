@@ -1,6 +1,8 @@
+[toc]
+
 # 动态规划
 
-![image-20220414021105832](C:/Users/YOS/Desktop/doc/repo/img/image-20220414021105832.png)
+![image-20220414021105832](/img/image-20220414021105832.png)
 
 
 

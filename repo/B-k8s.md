@@ -1,3 +1,5 @@
+[toc]
+
 #序-docker
 
 docker和虚拟机不同，虚拟机使用hypervisor技术，虚拟出虚拟硬件后安装了客户操作系统，用户的机器运行在这个虚拟的机器。docker使用Namespcae做了隔离，作为一个障眼法，docker中启动的进程无法看到在他之前的进程，只能看到指定内容，但容器化后的用户依然是宿主机上的普通进程，这也意味着docker的隔离并不彻底。
@@ -21,4 +23,5 @@ Linux使用chroot命令，改变进程的根目录位置，达到修改文件视
 以统一的方式抽象底层基础设施能力，定义任务编排的各种关系，将这些抽象以声明式API的方式对外暴露。
 
 - 对于频繁交互访问的容器，将他们划分在同一个Pod，Pod里的容器共享同一个Network Namespace
-- 一些常见的访问关系，如数据库和web应用，为了容灾性，不部署在同一机器，而是提供一种service服务。service和Pod绑定，Service服务声明的IP是固定不变的，Service服务的主要作用就是作为Pod的代理入口(Portal)。这样，对于web应用，只需要关心数据库Pod的service信息。而真正的IP地址由Kubernetes维护。
+- 一
+- 些常见的访问关系，如数据库和web应用，为了容灾性，不部署在同一机器，而是提供一种service服务。service和Pod绑定，Service服务声明的IP是固定不变的，Service服务的主要作用就是作为Pod的代理入口(Portal)。这样，对于web应用，只需要关心数据库Pod的service信息。而真正的IP地址由Kubernetes维护。

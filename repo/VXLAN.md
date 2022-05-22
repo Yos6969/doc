@@ -88,3 +88,9 @@ NAT的实现方式有三种，即静态转换Static Nat、动态转换Dynamic Na
 **端口多路复用（Port address Translation,PAT）**是指改变外出数据包的源端口并进行端口转换，即端口[地址转换](https://baike.baidu.com/item/地址转换)（PAT，Port Address Translation）.采用端口多路复用方式。内部网络的所有[主机](https://baike.baidu.com/item/主机)均可共享一个合法外部IP地址实现对Internet的访问，从而可以最大限度地节约IP地址资源。同时，又可隐藏网络内部的所有[主机](https://baike.baidu.com/item/主机)，有效避免来自internet的攻击。因此，网络中应用最多的就是端口多路复用方式。
 
 **ALG（Application Level Gateway）**，即应用程序级网关技术：传统的NAT技术只对IP层和传输层头部进行转换处理，但是一些[应用层协议](https://baike.baidu.com/item/应用层协议/3668945)，在协议数据报文中包含了地址信息。为了使得这些应用也能透明地完成NAT转换，NAT使用一种称作ALG的技术，它能对这些应用程序在通信时所包含的地址信息也进行相应的NAT转换。例如：对于FTP协议的PORT/PASV命令、DNS协议的 "A" 和 "PTR" queries命令和部分ICMP消息类型等都需要相应的ALG来支持。
+
+# 网关
+
+## 转发网关和NAT网关
+
+数据包经过的网关，MAC 地址只要过网关，就必定会改变（源MAC变为当前网关的MAC，目标MAC变为下一跳网关的MAC），而IP地址可能改变可能不改变。不改变 IP 地址的网关，我们称为转发网关；改变 IP 地址的网关（局域网IP转换成公网IP），我们称为NAT 网关。

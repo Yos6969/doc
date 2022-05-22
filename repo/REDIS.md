@@ -1,3 +1,5 @@
+[toc]
+
 # server.h
 
 所有的服务器配置和一般的所有共享状态都定义在一个名为`server`, 类型的全局结构中`struct redisServer`。此结构中的几个重要字段是：

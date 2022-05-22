@@ -1,3 +1,5 @@
+[toc]
+
 ### **1.什么是protobuf以及为何要使用protobuf**
 
 protocol buffer是由google推出一种数据编码格式，不依赖平台和语言。
