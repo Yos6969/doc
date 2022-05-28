@@ -296,7 +296,7 @@ var connectHandler = function connected() {
 }
  
 // 绑定 connection 事件处理程序
-eventEmitter.on('connection', connectHandler);
+eventEmitter.on('connection', connectHandler); 
  
 // 使用匿名函数绑定 data_received 事件
 eventEmitter.on('data_received', function(){
