@@ -1,5 +1,9 @@
 [toc]
 
+# 安装pip
+
+https://www.runoob.com/w3cnote/python-pip-install-usage.html
+
 # 常用数据结构
 
 ##字符串

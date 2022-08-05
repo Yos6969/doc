@@ -65,6 +65,18 @@ delete
 delete from table_name where some_column=song_value
 ```
 
+查看列属性
+
+```
+show columns from tablename
+```
+
+导入sql文件
+
+```
+source xx.sql
+```
+
 
 
 创建删除索引

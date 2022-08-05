@@ -951,3 +951,32 @@ console.log("文件解压完成。");
 $ node decompress.js 
 文件解压完成。
 ```
+
+### **4.4.2 依赖注入**
+
+而使用控制反转，我们通过一个IoC容器来管理这些依赖：
+
+```text
+class ReceiveArticle {
+    constructor(email_sender, msg_sender) {
+        this.email_sender = email_sender;
+        this.msg_sender = msg_sender;
+    }
+
+    notice(author_id) {
+        this.email_sender.send(author_id);
+        this.msg_sender.send(author_id);
+    }
+}
+
+// IoC容器
+const email_sender = new EmailSender();
+const msg_sender = new MsgSender();
+
+var received = new ReceiveArticle(email_sender, msg_sender);
+received.notice(author_id);
+```
+
+在这里，我们不再在类 `ReceiveArticle` 内部实例化其他两个资源（`EmailSender` 和 `MsgSender`），而是将实例化后的对象传入构造函数中。
+
+在这种模式下，类 `ReceiveArticle` 不需要关注如何对其他两个资源（`EmailSender` 和 `MsgSender`）进行实例化，也不需要担心实例化后有变更，需要修改这个类本身。这就是“依赖注入”

@@ -34,3 +34,31 @@ data: 文件系统特用挂载选项
 */
 ```
 
+# screen
+
+通过SSH远程登录到 Linux 服务器，运行耗时较长的程序，推荐使用screen命令：
+
+- screen -S name ：启动一个名字为name的screen
+- screen -S name -X quit ：删除某个session
+- screen -ls ：列出所有的screen
+- screen -r name或者id：连接回到某个screen
+- ctrl + a + d ：暂时断开当前screen会话
+- ctrl + a + c ：screen 在该会话内生成一个新的窗口并切换到该窗口
+
+docker run -d -p 0.0.0.0:830 -v /home/yos/module/:/module netopeer2-server -d 
+
+# ps 
+
+ps -aux  和 ps -a
+
+pstree -a 显示进程树
+
+# ldconfig
+
+vim /etc/ld.so.conf 直接加一行，增加库搜索目录
+
+然后 ldconfig加载
+
+# 开启服务
+
+service xrdp start

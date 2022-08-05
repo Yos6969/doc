@@ -96,6 +96,8 @@ I代表无效（invalid），表示缓存中的数据已经失效，即其他核
 	netstat
 查看大小端和cpu参数
 	lscpu	
+	
+	ldconfig -p 查看
 ```
 
 # 进程和线程、协程
@@ -629,9 +631,9 @@ Direct Memory Access,直接存储器访问。DMA传输将数据从一个地址�
 
 ![img](.\img\c++.jpg)
 
-![img](\img\1460000040678075)
+![img](.\img\1460000040678075)
 
-![内存碎片的问题](\img\memory_fragment.png)
+![内存碎片的问题](.\img\memory_fragment.png)
 
 - 外部内存碎片，也就是产生了多个不连续的小物理内存，导致新的程序无法被装载；
 - 内部内存碎片，程序所有的内存都被装载到了物理内存，但是这个程序有部分的内存可能并不是很常使用，这也会导致内存的浪费；
@@ -654,7 +656,7 @@ Direct Memory Access,直接存储器访问。DMA传输将数据从一个地址�
 64位系统的虚拟地址空间不是2^32， 也不是2^64，而一般是2^48。64位linux一般使用48位来表示虚拟地址空间，使用40位来表示物理地址空间，可以通过cat /proc/cpuinfo来查看，所以调试时的指针显示只有12位十六进制数
 ```
 
-![用户空间与内存空间](\img\virtumemoryaddr.png)
+![用户空间与内存空间](.\img\virtumemoryaddr.png)
 
 在 32 位的环境下，虚拟地址空间共有 4GB，假设一个页的大小是 4KB（2^12），那么就需要大约 100 万 （2^20） 个页，每个「页表项」需要 4 个字节大小来存储，那么整个 4GB 空间的映射就需要有 `4MB` 的内存来存储页表。
 
@@ -676,7 +678,7 @@ Direct Memory Access,直接存储器访问。DMA传输将数据从一个地址�
 - 上层页目录项 PUD（*Page Upper Directory*）；
 - 中间页目录项 PMD（*Page Middle Directory*）；
 - 页表项 PTE（*Page Table Entry*）；
-- ![四级目录](\img\mult-memory.png)
+- ![四级目录](.\img\mult-memory.png)
 
 ####TLB页表缓存*(Translation Lookaside Buffer)*
 
