@@ -19,11 +19,11 @@ NVE：设备运行了vxlan就是NVE
 
 https://www.bilibili.com/video/BV1oK4y1L795/
 
-![image-20220510105809400](.\img\image-20220510105809400.png)
+![image-20220510105809400](./img/image-20220510105809400.png)
 
 云数据中心大量使用虚拟机，所以东西向流量占比高，同时会有虚拟机迁移的业务，引入VXLAN做大二层网络转发
 
-<img src=".\img\image-20220510110243804.png" alt="image-20220510110243804" style="zoom:70%;" />
+<img src="./img/image-20220510110243804.png" alt="image-20220510110243804" style="zoom:70%;" />
 
 传统数据中心存在的问题：
 
@@ -32,13 +32,13 @@ https://www.bilibili.com/video/BV1oK4y1L795/
 - 收敛慢
 - 支持网络设备数量少，一般小于100台
 
-<img src=".\img\image-20220510111213837.png" alt="image-20220510111213837" style="zoom:75%;" />
+<img src="./img/image-20220510111213837.png" alt="image-20220510111213837" style="zoom:75%;" />
 
 ##二层转发
 
-![image-20220510111716890](.\img\image-20220510111716890.png)
+![image-20220510111716890](./img/image-20220510111716890.png)
 
-<img src=".\img\image-20220510112242444.png" alt="image-20220510112242444" style="zoom:50%;" />
+<img src="./img/image-20220510112242444.png" alt="image-20220510112242444" style="zoom:50%;" />
 
 TOR为接入层交换机。每台设备上可以创建很多个ID（类似于vlan一样），所有vni共享一个vtep，每个vni有自己的一个广播域，每个vni对应一个BD
 
@@ -54,15 +54,15 @@ TOR为接入层交换机。每台设备上可以创建很多个ID（类似于vla
 
 下图VM1与VM2通信
 
-![img](.\img\watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5paw5omL56yU6K6wMDg=,size_10,color_FFFFFF,t_70,g_se,x_16)
+![img](./img/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5paw5omL56yU6K6wMDg=,size_10,color_FFFFFF,t_70,g_se,x_16)
 
-<img src=".\img\image-20220510120055772.png" alt="image-20220510120055772" style="zoom:50%;" />
+/
 
 ![image-20220510155304115](.\img\image-20220510155304115.png)
 
-![image-20220510155322812](.\img\image-20220510155322812.png)
+![image-20220510155322812](./img/image-20220510155322812.png)
 
-![image-20220510155332571](.\img\image-20220510155332571.png)
+![image-20220510155332571](./img/image-20220510155332571.png)
 
 需要集中式网关进行转发，BDIF接口进行VXLAN封装
 

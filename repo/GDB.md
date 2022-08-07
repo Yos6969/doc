@@ -21,7 +21,7 @@ gdb -q test //表示不打印gdb版本信息，界面较为干净；
 gdb -q -tui
 ```
 
-![在这里插入图片描述](.\img\gdb.jpg)
+![在这里插入图片描述](./img/gdb.jpg)
 
 ```
 info break : 查看已经设置的断点
@@ -98,11 +98,11 @@ gdb [exec file] [core file]
 
 下面以简单的测试代码leaktest.c为例
 
-![img](.\img\leaktest.png)
+![img](./img/leaktest.png)
 
-![image-20220330112710901](.\img\image-20220330112710901.png)
+![image-20220330112710901](./img/image-20220330112710901.png)
 
-![img](.\img\leakall.png)
+![img](./img/leakall.png)
 
 ## valgrind
 
@@ -111,4 +111,4 @@ valgrind a.out
 #不需要重新编译，直接可以运行，比sanaddress慢得多
 ```
 
-![image-20220429170515676](.\img\image-20220429170515676.png)
+![image-20220429170515676](./img/image-20220429170515676.png)

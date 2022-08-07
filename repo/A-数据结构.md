@@ -6,7 +6,7 @@
 
 # 排序
 
-![image-20220315165721088](C:\Users\18181\Desktop\doc\repo\img\27.png)
+![image-20220315165721088](./img/27.png)
 
 
 
@@ -25,11 +25,11 @@ for(int i=0;i<nums.size();i++)
 
 
 
-##插入排序
+## 插入排序
 
 每次选择一个元素，并且将这个元素和整个数组中的所有元素进行比较，然后插入到合适的位置，图片演示如上，时间复杂度 O(n^2)
 
-![gif1](C:\Users\18181\Desktop\doc\repo\img\1.gif)
+![gif1](./img/1.gif)
 
 ```c++
 void insert_sort(vector<int>&vec) {
@@ -47,7 +47,7 @@ void insert_sort(vector<int>&vec) {
 
 插入排序的修改版，根据步长由长到短分组，进行排序，直到步长为1为止，属于插入排序的一种。
 
-![25](C:\Users\18181\Desktop\doc\repo\img\25.png)
+![25](./img/25.png)
 
 ```c++
 void shell_sort(vector<int>&vec) {
@@ -67,7 +67,7 @@ void shell_sort(vector<int>&vec) {
 
 ##归并排序
 
-![16](C:\Users\18181\Desktop\doc\repo\img\16.jpg)
+![16](./img/16.jpg)
 
 ##快排
 
@@ -200,7 +200,7 @@ public:
 
 直接统计数量，然后重排数组，时间空间复杂度都是o(n+k)
 
-![img](C:\Users\18181\Desktop\doc\repo\img\countSort.png)
+![img](./img/countSort.png)
 
 ```c++
 class Solution {
@@ -257,7 +257,7 @@ public:
 
 # 查找
 
-![image-20220315165853302](.\img\28.png)
+![image-20220315165853302](./img/28.png)
 
 # 栈和队列
 
@@ -295,7 +295,7 @@ public:
 
 非平衡二叉树(左)和平衡二叉树(右)如下图所示：
 
-![14](C:/Users/18181/Desktop/doc/repo/img/14.png)
+![14](./img/14.png)
 
 ### 红黑树
 
@@ -315,7 +315,7 @@ public:
 
 它的添加、删除以及查询数据的时间复杂度为 O(logn)。
 
-![15](C:/Users/18181/Desktop/doc/repo/img/15.png)
+![15](./img/15.png)
 
 哪些地方用到了红黑树？
 

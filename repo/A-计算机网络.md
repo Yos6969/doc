@@ -1,14 +1,14 @@
 [toc]
 
-#OSI七层和TCP四层
+# OSI七层和TCP四层
 
 ![](./img/tcpiso.png)
 
 # TCP
 
-##TCP状态转移
+## TCP状态转移
 
-![26](.\img\26.png)
+![26](./img/26.png)
 
 ## TCP协议格式
 
@@ -63,9 +63,9 @@
 
 ## 同时打开关闭
 
-![img](\img\synopen.png)
+![img](./img/synopen.png)
 
-![img](\img\synclose.png)
+![img](./img/synclose.png)
 
 ## 2MSL等待状态
 
@@ -92,7 +92,7 @@ TIME_WAIT状态的作用主要有两个：
 5.TCP首部开销大，因为首部就占了20个字节。UDP首部开销相对小一点，只占了8个字节。 （eg: UDP的8个字节分布在：源端口、目的端口、数据长度、校验和）
 ```
 
-##粘包
+## 粘包
 
 当时短连接的情况下，不用考虑粘包的情况
 如果发送数据无结构，如文件传输，这样发送方只管发送，接收方只管接收存储就ok，也不用考虑粘包
@@ -114,7 +114,7 @@ TIME_WAIT状态的作用主要有两个：
 
 答案比较简单。会把数据包切分小块。这样数据就可以由大变小，顺利传输。
 
-<img src="\img\v2-f376640cf1caeb3c87c1d46f3fe7ff5c_720w.jpg" alt="img" style="zoom:50%;" />
+<img src="./img/v2-f376640cf1caeb3c87c1d46f3fe7ff5c_720w.jpg" alt="img" style="zoom:50%;" />
 
 ## TCP超时重传
 
@@ -137,7 +137,7 @@ TCP在发送数据时会设置一个计时器，超时重传定时器是TCP连�
 **MSS：Maximum Segment Size** 。TCP 提交给 IP 层最大分段大小，不包含 TCP Header 和 TCP Option，只包含 TCP Payload ，MSS 是 TCP 用来限制应用层最大的发送字节数。
 假设 MTU= 1500 byte，那么 **MSS = 1500- 20(IP Header) -20 (TCP Header) = 1460 byte**，如果应用层有 **2000 byte** 发送，那么需要两个切片才可以完成发送，第一个 TCP **切片** = 1460，第二个 TCP 切片 = 540。
 
-##流量控制
+## 流量控制
 
 TCP为它的应用程序提供了流量控制服务（flow control service），以消除发送方使接收方数据溢出的可能性。
 
@@ -221,16 +221,16 @@ TCP所采用的方法是让每一个发送方根据所感知的网络拥塞程�
 - 当cwnd>=ssthresh，进入后面介绍的“拥塞避免”阶段。
 - 如果检测到三个冗余ACK（duplicate ACK），这时TCP进入快速重转并进入快速恢复状态。
 
-![img](.\img\manqidong.jpg)
+![img](./img/manqidong.jpg)
 
-###拥塞避免（ Congestion Avoidance）算法
+### 拥塞避免（ Congestion Avoidance）算法
 
 当cwnd>=ssthresh，进入拥塞避免阶段，此时cwnd的增长不再像之前那样是指数增长，而是线性增长。
 
 - 收到一个ACK时，cwnd = cwnd + 1/cwnd。
 - 当每过一个RTT时，cwnd = cwnd + 1。
 
-###拥塞状态的算法
+### 拥塞状态的算法
 
 TCP拥塞控制认为网络丢包是由于网络拥塞造成的，有如下两种判定丢包的方式：
 
@@ -254,7 +254,7 @@ TCP拥塞控制认为网络丢包是由于网络拥塞造成的，有如下两�
 
 以下图来解释上面三种状态的处理：
 
-![](.\img\tcp-congestion-avoidance-example.png)
+![](./img/tcp-congestion-avoidance-example.png)
 
 上图中，横轴为传输轮次，纵轴为cwnd大小，按照时间顺序，其过程如下：
 
@@ -280,7 +280,7 @@ TCP拥塞控制认为网络丢包是由于网络拥塞造成的，有如下两�
 - 如果再收到重复ACK，cwnd递增1。
 - 如果收到新的ACK，表明重传的报文已经收到。此时将cwnd设置为ssthresh值，进入拥塞避免状态。
 
-[![fast-recovery-example](.\img\fast-recovery-example.png)
+[![fast-recovery-example](./img/fast-recovery-example.png)
 
 如上图中：发送端的第五个包丢失，导致发送端收到三个重复的针对第五个包的ACK。此时将ssthresh值设置为当时cwnd的一半，即6/2=3，而cwnd设置为3+3=6。然后重传第五个包。当收到最新的ACK时，即ACK 11，此时将cnwd设置为当前的ssthresh，即3，然后退出快速恢复而进入拥塞避免状态。
 
@@ -288,7 +288,7 @@ TCP拥塞控制认为网络丢包是由于网络拥塞造成的，有如下两�
 
 有了前面的解释，理解TCP拥塞控制算法的FSM就容易了：
 
-![](.\img\congestion-flow-algo-fsm.png)
+![](./img/congestion-flow-algo-fsm.png)
 
 下面对以上FSM进行简单的总结，每个状态转换箭头都做了数字标记，以数字标记为序来分别做解释：
 
@@ -377,7 +377,7 @@ Nagle算法的基本定义是**任意时刻，最多只能有一个未被确认�
 
 举个例子，一开始client端调用socket的write操作将一个int型数据(称为A块)写入到网络中，由于此时连接是空闲的（也就是说还没有未被确认的小段），因此这个int型数据会被马上发送到server端，接着，client端又调用write操作写入‘/r/n’（简称B块），这个时候，A块的ACK没有返回，所以可以认为已经存在了一个未被确认的小段，所以B块没有立即被发送，一直等待A块的ACK收到（大概40ms之后），B块才被发送。整个过程如图所示：
 
-![img](.\img\408ab8714b0187e9738672567f855018_720w.jpg)
+![img](./img\408ab8714b0187e9738672567f855018_720w.jpg)
 
 这里还隐藏了一个问题，就是A块数据的ACK为什么40ms之后才收到？这是因为TCP/IP中不仅仅有nagle算法，还有一个**ACK延迟机制**(需要在服务器设置开启) 。当Server端收到数据之后，它并不会马上向client端发送ACK，而是会将ACK的发送延迟一段时间（假设为t），它希望在t时间内server端会向client端发送应答数据，这样ACK就能够和应答数据一起发送，就像是应答数据捎带着ACK过去。在我之前的时间中，t大概就是40ms。这就解释了为什么'/r/n'(B块)总是在A块之后40ms才发出。
 
@@ -574,7 +574,7 @@ HTTPS 并不是新协议，而是让 HTTP 先和 SSL（Secure Sockets Layer）�
 
 通过使用 SSL，HTTPS 具有了加密（防窃听）、认证（防伪装）和完整性保护（防篡改）。
 
-![img](.\img\ssl.jpg)
+![img](./img/ssl.jpg)
 
 ###加密
 
@@ -585,7 +585,7 @@ HTTPS 并不是新协议，而是让 HTTP 先和 SSL（Secure Sockets Layer）�
 - 优点：运算速度快；
 - 缺点：无法安全地将密钥传输给通信方。
 
-![img](.\img\keyinssh.png)
+![img](./img/keyinssh.png)
 
 2.非对称密钥加密
 
@@ -597,7 +597,7 @@ HTTPS 并不是新协议，而是让 HTTP 先和 SSL（Secure Sockets Layer）�
 
 - 优点：可以更安全地将公开密钥传输给通信发送方；
 - 缺点：运算速度慢。
-- ![img](.\img\keyinssh1.png)
+- ![img](./img/keyinssh1.png)
 
 3.HTTPS采用的加密方式
 
@@ -634,7 +634,7 @@ HTTP 也提供了 MD5 报文摘要功能，但不是安全的。例如报文内�
 
 HTTPS 的报文摘要功能之所以安全，是因为它结合了加密和认证这两个操作。试想一下，加密之后的报文，遭到篡改之后，也很难重新计算报文摘要，因为无法轻易获取明文。
 
-##Get与Post的区别
+## Get与Post的区别
 
 - GET 用于获取资源，而 POST 用于传输实体主体。
 
@@ -659,7 +659,7 @@ HTTPS 的报文摘要功能之所以安全，是因为它结合了加密和认�
 
 
 
-##常用的HTTP方法
+## 常用的HTTP方法
 
 ```
 GET 从服务器获得资源
@@ -696,11 +696,11 @@ DELETE 删除服务器相关资源
 
 Netfilter是Linux 2.4内核的一个子系统，Netfiler使得诸如数据包过滤、网络地址转换(NAT)以及网络连接跟踪等技巧成为可能，这些功能仅通过使用内核网络代码提供的各式各样的hook既可以完成。这些hook位于内核代码中，要么是静态链接的，要么是以动态加载的模块的形式存在。可以为指定的网络事件注册相应的回调函数，数据包的接收就是这样一个例子。
 
-![img](\img\1317676-20190316165749468-333401236.jpg)
+![img](./img/1317676-20190316165749468-333401236.jpg)
 
 在数据包流经内核协议栈的整个过程中，在一些已预定义的关键点上PRE_ROUTING、LOCAL_IN、FORWARD、LOCAL_OUT和POST_ROUTING会根据数据包的协议簇PF_INET到这些关键点去查找是否注册有钩子函数。如果没有，则直接返回okfn函数指针所指向的函数继续走协议栈；如果有，则调用nf_hook_slow函数，从而进入到Netfilter框架中去进一步调用已注册在该过滤点下的钩子函数，再根据其返回值来确定是否继续执行由函数指针okfn所指向的函数。
 
-![img](\img\1317676-20190316165802965-786516494.jpg)
+![img](./img/1317676-20190316165802965-786516494.jpg)
 
 # 杂项
 
@@ -818,14 +818,13 @@ http{
 
 tcp自连接：tcp连接两段使用了同一端口进行连接，而tcp并没有报错并且连接成功。即localhost:x --> localhost:x 。而产生这种现象的原因源自于tcp内部的一种特性，而处理自连接的方法也很简单。
 
-
-##DHCP-动态主机设置协议
+## DHCP-动态主机设置协议
 
 https://www.cnblogs.com/easonscx/p/10724742.html
 
 
 
-##网络通信元组
+## 网络通信元组
 
 ```
 四元组：源IP地址，源端口，目的IP地址，目的端口

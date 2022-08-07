@@ -202,4 +202,4 @@ Reactor模式 --非阻塞IO+多路复用
 
 muduo并发模型one loop per thread + threadpool（计算线程池）
 
-![image-20220324153531298](.\img\muduoEventLoop.png)
+![image-20220324153531298](./img/muduoEventLoop.png)

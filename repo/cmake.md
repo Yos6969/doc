@@ -162,7 +162,7 @@ find_package(Boost 1.46.1 REQUIRED COMPONENTS unit_test_framework)
 
 把一整个依赖包的头文件包含路径、库路径、库名字、版本号等情况都获取到
 
-![21](.\img\21.png)
+![21](./img/21.png)
 
 `version`和`EXACT`: 都是可选的，`version`指定的是版本，如果指定就必须检查找到的包的版本是否和`version`兼容。如果指定`EXACT`则表示必须完全匹配的版本而不是兼容版本就可以。
 

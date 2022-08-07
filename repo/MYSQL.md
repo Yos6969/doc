@@ -203,11 +203,11 @@ select column_name as alias_name from table_name//表的别名
 select column_name(s) from table_name as alias_name//列的别名
 ```
 
-![19](.\img\19.png)
+![19](./img/19.png)
 
 JOIN  连接 用于把来自两个或多个表的行结合起来
 
-![20](.\img\20.png)
+![20](./img/20.png)
 
 inner join ==join     关键字在表中存在至少一个匹配时返回行
 
@@ -341,7 +341,7 @@ select fromhttps://blog.csdn.net/qq_39390545/article/details/115037994
 
 例如，"中国河南枣庄"可拆成国家、省份、市，不符合第一范式
 
-![23](.\img\23.png)
+![23](./img/23.png)
 
 ```sql
 mysql> select * from employee;

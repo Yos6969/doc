@@ -348,7 +348,7 @@ int main(int argc, char** argv)
 
 单线程Reactor的程序结构如下：
 
-![wpsC334.tmp](C:\Users\18181\Desktop\doc\repo\img\1485398-20181022232217633-124484857.jpg)
+![wpsC334.tmp](./img/1485398-20181022232217633-124484857.jpg)
 
 上图中的**Reactor**的基本结构是一个事件循环(event loop),以事件驱动(event-driven)和事件回调的方式实现业务逻辑，伪代码如下：
 
@@ -376,7 +376,7 @@ while (!done)
 
 此模式的程序结构如下：
 
-![image](C:\Users\18181\Desktop\doc\repo\img\1485398-20181022232219420-1734756772.png)
+![image](./img/1485398-20181022232219420-1734756772.png)
 
 相比于模式一，此模式中收到请求后，不在Reactor线程计算，而是使用线程池来计算，这会充分的利用多核CPU。采用此模式时有可能存在多个线程同时计算同一个连接上的多个请求，算出的结果的次序是不确定的，  所以需要网络框架在设计协议时带一个id标示，以便以便让客户端区分response对应的是哪个request。
 
@@ -384,7 +384,7 @@ while (!done)
 
 此模式的程序结构如下：
 
-![img](C:\Users\18181\Desktop\doc\repo\img\reactor3.png)
+![img](./img/reactor3.png)
 
 此模式的特点是one loop per thread， 有一个main Reactor负责accept连接, 然后把该连接挂在某个sub  Reactor中(可以采用round-robin或者随机方法)，这样该连接的所有操作都在哪个sub  Reactor所处的线程中完成。多个连接可能被分配到多个线程中，充分利用CPU。在应用场景中，Reactor的个数可以采用  固定的个数，比如跟CPU数目一致。此模式与模式二相比，减少了进出thread  pool两次上线文切换，小规模的计算可以在当前IO线程完成并且返回结果，降低响应的延迟。并可以有效防止当IO压力过大时一个Reactor处理能力饱和问题。**纯转发的proxy服务适合使用这种模式**
 
@@ -392,6 +392,6 @@ while (!done)
 
 此模式的程序结构如下
 
-![img](C:\Users\18181\Desktop\doc\repo\img\reactor4.png)
+![img](./img/reactor4.png)
 
 此模式是模式二和模式三的混合体，它既使用多个 reactors 来处理 IO，又使用线程池来处理计算。此模式适适合既有突发IO(利用Multiple Reactor分担)，又有突发计算的应用（利用线程池把一个连接上的计算任务分配给多个线程）。

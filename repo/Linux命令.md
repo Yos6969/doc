@@ -62,3 +62,28 @@ vim /etc/ld.so.conf 直接加一行，增加库搜索目录
 # 开启服务
 
 service xrdp start
+
+# 查看系统参数
+
+```
+查看CPU信息：
+	ps：显示按照按照消耗CPU前10排序的进程
+	top：任务、CPU状态、内存状态、各进程的状态监控
+查看内存信息：
+	ps
+	top
+	pmap：查看进程的内存状态，以及内存映射
+查看磁盘IO信息
+	iotop
+	iostat
+查看端口信息
+	netstat
+查看大小端和cpu参数
+	lscpu	
+	
+	ldconfig -p 查看
+查看磁盘信息
+	df -h
+```
+
+# 

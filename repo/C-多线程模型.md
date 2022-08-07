@@ -24,17 +24,17 @@
 
 **缺点**：顺序一致性实际上是一种强一致性，可以想象成整个程序过程中由一个开关来选择执行的线程，这样才能同时保证顺序一致性的两个条件,这样实际上还是相当于同一时间只有一个线程在工作，这种保证导致了程序是低效的，无法充分利用上多核的优点。
 
-![sc-switch](C:\Users\18181\Desktop\doc\repo\img\sc-switch.png)
+![sc-switch](./img/sc-switch.png)
 
 ###全存储排序（Total Store Ordering, 简称TSO）
 
 有一些CPU架构，在处理核心中增加写缓存，一个写操作只要写入到本核心的写缓存中就可以返回，此时的CPU结构如图所示（图中并没有画出三级cache）：
 
-![tso](C:\Users\18181\Desktop\doc\repo\img\tso.png)
+![tso](./img/tso.png)
 
 在新的CPU架构下，写一个值可能值写到本核心的缓冲区中就返回了，接着执行下面的一条指令，因此可能出现以下的情况：
 
-![multicore-2](C:\Users\18181\Desktop\doc\repo\img\multicore-2.png)
+![multicore-2](./img/multicore-2.png)
 
 - 执行操作1，core 1写入A的新值1到core 1的缓冲区中之后就马上返回了，还并没有更新到所有CPU都能访问到的内存中。
 - 执行操作3，core 2写入B的新值2到core 2的缓冲区中之后就马上返回了，还并没有更新到所有CPU都能访问到的内存中。
@@ -98,7 +98,7 @@ source: http://www.parallellabs.com/2010/03/06/why-should-programmer-care-about-
 
 由于有了缓冲区的出现，导致一些操作不用到内存就可以返回继续执行后面的操作，为了保证某些操作必须是写入到内存之后才执行，就引入了内存栅栏（memory barrier，又称为memory fence）操作。内存栅栏指令保证了，在这条指令之前所有的内存操作的结果，都在这个指令之后的内存操作指令被执行之前，写入到内存中。也可以换另外的角度来理解内存栅栏指令的作用：显式的在程序的某些执行点上保证SC。
 
-![memorybarrier](C:\Users\18181\Desktop\doc\repo\img\memorybarrier.png)
+![memorybarrier](./img/memorybarrier.png)
 
 再次以前面的例子来说明这个指令，在X64下面，内存屏障指令使用汇编指令`asm volatile ("pause" ::: "memory");`来实现，如果将这个指令放到两个赋值语句之间：
 
@@ -147,9 +147,9 @@ std::memory_order（可译为内存序，访存顺序）
 
 　　假设存在两个共享变量a, b，初始值均为 0，两个线程运行不同的指令，如下表格所示，线程 1 设置 a 的值为 1，然后设置 R1 的值为 b，线程 2 设置 b 的值为 2，并设置 R2 的值为 a，请问在不加任何锁或者其他同步措施的情况下，R1，R2 的最终结果会是多少？
 
-![img](C:/Users/18181/Desktop/doc/repo/img/memoryorder.png)
+![img](./img/memoryorder.png)
 
-![img](C:/Users/18181/Desktop/doc/repo/img/memoryorder1.png)
+![img](./img/memoryorder1.png)
 
 ​		由于没有施加任何同步限制，两个线程将会交织执行，但交织执行时指令不发生重排，即线程 1 中的 a = 1 始终在 R1 = b 之前执行，而线程 2 中的 b = 2 始终在 R2 = a 之前执行 ，因此可能的执行序列共有 4!/(2!*2!) = 6 种
 
@@ -176,7 +176,7 @@ enum memory_order {
 
 - Relax 模型(std::memory_order_relaxed)（宽松的内存序列化模型）。
 
-![c++model](C:/Users/18181/Desktop/doc/repo/img/c++model.png)
+![c++model](./img/c++model.png)
 
 | memory order         | 作用                                                         |
 | -------------------- | ------------------------------------------------------------ |
@@ -351,7 +351,7 @@ int main()
 
 然而即便是这样，仍然可能出现以下类似的情况：.
 
-![](C:\Users\18181\Desktop\doc\repo\img\5.7.png)
+![](./img/5.7.png)
 
 如上图所示：
 
@@ -391,7 +391,7 @@ int main()
 }
 ```
 
-![](C:\Users\18181\Desktop\doc\repo\img\5.8.png)
+![](./img/5.8.png)
 
 如上图所示：
 
@@ -491,8 +491,8 @@ synchronizes-with关系强调的是变量被修改之后的传播关系（propag
 
 假设这两个线程使用监视器锁来正确同步：A 线程的三个操作执行后释放监视器锁，随后 B 线程获取同一个监视器锁。那么程序在顺序一致性模型中的执行效果如下：
 
-![在这里插入图片描述](C:/Users/18181/Desktop/doc/repo/img/seq1.png)
+![在这里插入图片描述](./img/seq1.png)
 
 现在再假设这两个线程没有做同步，下面是这个未同步程序在顺序一致性模型中的执行示意图：
 
-![在这里插入图片描述](C:/Users/18181/Desktop/doc/repo/img/seqconsist1.png)
+![在这里插入图片描述](./img/seqconsist1.png)
