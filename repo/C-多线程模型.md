@@ -1,6 +1,6 @@
 [toc]
 
-#多线程
+# 多线程
 
 ## 多线程数据访问问题
 
@@ -26,7 +26,7 @@
 
 ![sc-switch](./img/sc-switch.png)
 
-###全存储排序（Total Store Ordering, 简称TSO）
+### 全存储排序（Total Store Ordering, 简称TSO）
 
 有一些CPU架构，在处理核心中增加写缓存，一个写操作只要写入到本核心的写缓存中就可以返回，此时的CPU结构如图所示（图中并没有画出三级cache）：
 
@@ -242,7 +242,7 @@ Sequential Consistency。最直白、简单的一种内存模型：顺序一致�
    }
    ```
 
-##memory_order_relaxed
+## memory_order_relaxed
 
 没有顺序一致性的要求，也就是说同一个线程的原子操作还是按照happens-before关系，但不同线程间的执行关系是任意。
 
@@ -283,20 +283,19 @@ int main()
 }
 ```
 
-##memory_order_release
+## memory_order_release
 
 1. 对写入施加 release 语义（store），在代码中这条语句前面的所有读写操作都无法被重排到这个操作之后，即 store-store 不能重排为 store-store, load-store 也无法重排为 store-load
 2. 当前线程内的所有写操作，对于其他对这个原子变量进行 acquire 的线程可见
 3. 当前线程内的与这块内存有关的所有写操作，对于其他对这个原子变量进行 consume 的线程可见
 
-##memory_order_acquire
+## memory_order_acquire
 
 1. 对读取施加 acquire 语义（load），在代码中这条语句后面所有读写操作都无法重排到这个操作之前，即 load-store 不能重排为 store-load, load-load 也无法重排为 load-load
 
 2. 在这个原子变量上施加 release 语义的操作发生之后，acquire 可以保证读到所有在 release 前发生的写入
 
-
-##memory_order_acq_rel
+## memory_order_acq_rel
 
 1. 对读取和写入施加 acquire-release 语义，无法被重排
 2. 可以看见其他线程施加 release 语义的所有写入，同时自己的 release 结束后所有写入对其他施加 acquire 语义的线程可见
@@ -402,7 +401,7 @@ int main()
 
 从以上的分析可以看出，针对同一个变量的release-acquire操作，更多时候扮演了一种“线程间使用某一变量的同步”作用，由于有了这个语义的保证，做到了线程间操作的先后顺序保证（inter-thread happens-before）。
 
-##memory_order_consume
+## memory_order_consume
 
 1. 从上面对Acquire-Release模型的分析可以知道，虽然可以使用这个模型做到两个线程之间某些操作的synchronizes-with关系，然后这个粒度有些过于大了。
 

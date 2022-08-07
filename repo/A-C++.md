@@ -30,7 +30,7 @@
 
 ### 几种继承方式
 
-![1](./img/屏幕截图 2021-11-17 144148.png)
+![1](./img/xx.png)
 
 `下面的表总结了公有、私有和保护继承的不同`
 
@@ -1068,7 +1068,203 @@ int main(){
 //1
 ```
 
-# std::atomic--参考操作系统.md
+# 左值和右值
+
+1) 可位于赋值号（=）左侧的表达式就是左值；反之，只能位于赋值号右侧的表达式就是右值
+
+2) 有名称的、可以获取到存储地址的表达式即为左值；反之则是右值。
+
+```c++
+int && a = 10;
+a = 100;
+cout << a << endl;//100
+```
+
+
+
+## 右值引用
+
+一般来说，右值无法使用&取地址，c++11提供了&&来取得右值的引用(只能绑定右值)
+
+看下面的函数，
+
+```c++
+class Copyable {
+public:
+    Copyable(){}
+    Copyable(const Copyable &o) {
+        cout << "Copied" << endl;
+    }
+};
+Copyable ReturnRvalue() {
+    return Copyable(); //返回一个临时对象
+}
+void AcceptVal(Copyable a) {
+
+}
+void AcceptRef(const Copyable& a) {
+
+}
+
+int main() {
+    cout << "pass by value: " << endl;
+    AcceptVal(ReturnRvalue()); // 应该调用两次拷贝构造函数
+    cout << "pass by reference: " << endl;
+    AcceptRef(ReturnRvalue()); //应该只调用一次拷贝构造函数
+}
+```
+
+
+
+1. 左值引用， 使用 `T&`, 只能绑定**左值**-----------函数参数中，传入一个例如  void fuc(int & a)
+2. 右值引用， 使用 `T&&`， 只能绑定**右值**
+3. 常量左值， 使用 `const T&`, 既可以绑定**左值**又可以绑定**右值**<上面的代码示例了这一点>-----------函数参数中，传入一个例如  void fuc(const int & a)
+4. 已命名的**右值引用**，编译器会认为是个**左值**
+5. 编译器有返回值优化，但不要过于依赖
+6. 注意 ，不是所有&&都是右值引用，有时也有“通用引用(universal reference)”的含义，出现在类型推导的场景，详见下面的完美转发
+
+## 移动语义
+
+实现移动语义就必须增加两个函数：移动构造函数和移动赋值构造函数
+
+```c++
+class myclass{
+	public：
+	~~~
+	~~~
+     //移动构造函数
+MyString(MyString&& str) noexcept
+       :m_data(str.m_data) {
+       MCtor ++;
+       str.m_data = nullptr; //不再指向之前的资源了
+   }
+      //移动赋值函数
+MyString& operator=(MyString&& str) noexcept{
+       MAsgn ++;
+       if (this == &str) // 避免自我赋值!!
+          return *this;
+
+       delete[] m_data;
+       m_data = str.m_data;
+       str.m_data = nullptr; //不再指向之前的资源了
+       return *this;
+   }
+   private:
+   char* m_data;
+   
+   }
+```
+
+移动构造函数与拷贝构造函数的区别是，拷贝构造的参数是`const MyString& str`，是*常量左值引用*，而移动构造的参数是`MyString&& str`，是*右值引用*，而`MyString("hello")`是个临时对象，是个右值，优先进入**移动构造函数**而不是拷贝构造函数。而移动构造函数与拷贝构造不同，它并不是重新分配一块新的空间，将要拷贝的对象复制过来，而是"偷"了过来，将自己的指针指向别人的资源，然后将别人的指针修改为`nullptr`，这一步很重要，如果不将别人的指针修改为空，那么临时对象析构的时候就会释放掉这个资源，"偷"也白偷了。<delete一个空指针，编译器自动忽略，什么也不会发生，苏哦一不用判断是否为空>
+
+## move
+
+对于一个左值，编译器肯定是调用拷贝构造函数，能不能也移动构造而不是拷贝构造呢？`C++11`为了解决这个问题，提供了`std::move()`方法来将左值转换为右值，从而方便应用移动语义
+
+```c++
+for(int i=0;i<1000;i++){
+        MyString tmp("hello");
+        vecStr2.push_back(std::move(tmp)); //调用的是移动构造函数，需要MyString中实现了移动构造函数
+    }
+```
+
+1. 如果我们*没有提供移动构造函数，只提供了拷贝构造函数*，`std::move()`会失效但是不会发生错误，因为编译器找不到移动构造函数就去寻找拷贝构造函数，也这是拷贝构造函数的参数是`const T&`常量左值引用的原因！
+
+## 完美转发
+
+通过一个函数将参数继续转交给另一个函数进行处理，原参数可能是右值，可能是左值，如果还能继续保持参数的原有特征，那么它就是完美的
+
+下面是一个非完美转发的例子
+
+```c++
+void process(int& i){
+    cout << "process(int&):" << i << endl;
+}
+void process(int&& i){
+    cout << "process(int&&):" << i << endl;
+}
+
+void myforward(int&& i){
+    cout << "myforward(int&&):" << i << endl;
+    process(i);
+}
+
+int main()
+{
+    int a = 0;
+    process(a); //a被视为左值 process(int&):0
+    process(1); //1被视为右值 process(int&&):1
+    process(move(a)); //强制将a由左值改为右值 process(int&&):0
+    myforward(2);  //右值经过forward函数转交给process函数，却称为了一个左值，
+    //原因是该右值有了名字  所以是 process(int&):2
+    myforward(move(a));  // 同上，在转发的时候右值变成了左值  process(int&):0
+    // forward(a) // 错误用法，右值引用不接受左值
+}
+```
+
+而c++中提供了一个`std::forward()`模板函数解决这个问题。将上面的`myforward()`函数简单改写一下：
+
+```c++
+void myforward(int&& i){
+    cout << "myforward(int&&):" << i << endl;
+    process(std::forward<int>(i));
+}
+
+myforward(2); // process(int&&):2
+```
+
+上面修改过后还是不完美转发，`myforward()`函数能够将右值转发过去，但是并不能够转发左值，解决办法就是借助`universal references`通用引用类型和`std::forward()`模板函数共同实现完美转发。例子如下：
+
+```c++
+void RunCode(int &&m) {
+    cout << "rvalue ref" << endl;
+}
+void RunCode(int &m) {
+    cout << "lvalue ref" << endl;
+}
+void RunCode(const int &&m) {
+    cout << "const rvalue ref" << endl;
+}
+void RunCode(const int &m) {
+    cout << "const lvalue ref" << endl;
+}
+
+// 这里利用了universal references，如果写T&,就不支持传入右值，而写T&&，既能支持左值，又能支持右值
+//int b=1;这是模板的特性 
+//auto && a=b;  //int a&&=b会报错
+template<typename T>
+void perfectForward(T && t) {
+    RunCode(forward<T> (t));
+}
+
+template<typename T>
+void notPerfectForward(T && t) {
+    RunCode(t);
+}
+
+int main()
+{
+    int a = 0;
+    int b = 0;
+    const int c = 0;
+    const int d = 0;
+
+    notPerfectForward(a); // lvalue ref
+    notPerfectForward(move(b)); // lvalue ref
+    notPerfectForward(c); // const lvalue ref
+    notPerfectForward(move(d)); // const lvalue ref
+
+    cout << endl;
+    perfectForward(a); // lvalue ref
+    perfectForward(move(b)); // rvalue ref
+    perfectForward(c); // const lvalue ref
+    perfectForward(move(d)); // const rvalue ref
+}
+```
+
+# 多线程相关std库
+
+## std::atomic
 
 <atomic>
 
@@ -1167,7 +1363,7 @@ int main(int argc, char* argv[])
 
 #C++多线程
 
-##std::thread()
+## std::thread()
 
 - 默认构造函数，创建一个空的 `std::thread` 执行对象。
 - 初始化构造函数，创建一个 `std::thread` 对象，该 `std::thread` 对象可被 `joinable`，新产生的线程会调用 `fn` 函数，该函数的参数由 `args` 给出。
@@ -1236,11 +1432,11 @@ int main(int argc, char* argv[])
 
        __thread使用规则：只能修饰POD类型(类似整型指针的标量，不带自定义的构造、拷贝、赋值、析构的类型，二进制内容可以任意复制memset,memcpy,且内容可以复原)，不能修饰class类型，因为无法自动调用构造函数和析构函数，可以用于修饰全局变量，函数内的静态变量，不能修饰函数的局部变量或者class的普通成员变量，且__thread变量值只能初始化为编译器常量(值在编译器就可以确定const int i=5,运行期常量是运行初始化后不再改变const int i=rand()).
 
-##MUTEX
+## std::MUTEX
 
 我们在操作系统、亦或是数据库的相关知识中已经了解过了有关并发技术的基本知识，mutex 就是其中的核心之一。 C++11 引入了 mutex 相关的类，其所有相关的函数都放在 <mutex> 头文件中。
 
-#### Mutex 系列类(四种)
+### Mutex 系列类(四种)
 
 - std::mutex，最基本的 Mutex 类，互斥锁。
 - std::recursive_mutex，递归 Mutex 类。
@@ -1288,37 +1484,33 @@ bool spin_lock::try_lock() noexcept
 #endif
 ```
 
-
-
-#### Lock 类（两种）
+### Lock 类（两种）
 
 - std::lock_guard，与 Mutex RAII 相关，方便线程对互斥量上锁。
 
-- ```c++
-  explicit lock_guard(_Mutex& _Mtx) : _MyMutex(_Mtx) { // construct and lock
-          _MyMutex.lock();
-      }
-  
-  ~lock_guard() noexcept {
-      _MyMutex.unlock();
-  }
-  ```
+```c++
+explicit lock_guard(_Mutex& _Mtx) : _MyMutex(_Mtx) { // construct and lock
+        _MyMutex.lock();
+    }
+
+~lock_guard() noexcept {
+    _MyMutex.unlock();
+}
+```
 
 - std::unique_lock，与 Mutex RAII 相关，方便线程对互斥量上锁，但提供了更好的上锁和解锁控制。
 
-- ```c++
-  explicit unique_lock(_Mutex& _Mtx) : _Pmtx(_STD addressof(_Mtx)), _Owns(false) { // construct and lock
-      _Pmtx->lock();
-      _Owns = true;
-  }
-  ~unique_lock() noexcept {
-          if (_Owns) {
-              _Pmtx->unlock();
-          }
-      }
-  ```
-
-#### 函数
+```c++
+explicit unique_lock(_Mutex& _Mtx) : _Pmtx(_STD addressof(_Mtx)), _Owns(false) { // construct and lock
+    _Pmtx->lock();
+    _Owns = true;
+}
+~unique_lock() noexcept {
+        if (_Owns) {
+            _Pmtx->unlock();
+        }
+    }
+```
 
 - std::try_lock，尝试同时对多个互斥量上锁。
 - std::lock，可以同时对多个互斥量上锁。
@@ -1394,7 +1586,7 @@ std::cout << v << std::endl;
     return 0;
   }
 ```
-##std::condition_variable
+## std::condition_variable
 
 当std::condition_variable对象的某个wait函数被调用的时候，它使用std::unique_lock(通过std::mutex) 来锁住当前线程。当前线程会一直被阻塞，直到另外一个线程在相同的std::condition_variable对象上调用了notification函数来唤醒当前线程。
 
@@ -1450,9 +1642,7 @@ int main()
 }
 ```
 
-
-
-##std::promise||future
+## std::promise||future
 
 ![](./img/800081-20190815205102578-1377096594.png)
 
@@ -1603,9 +1793,7 @@ int main()
 }
 ```
 
-
-
-# 模板
+# C++模板
 
 ## 可变参数模板
 
@@ -1687,200 +1875,6 @@ print(1,2,3,4);
 print(2,3,4);
 print(3,4);
 print(4);
-```
-
-# 左值和右值
-
-1) 可位于赋值号（=）左侧的表达式就是左值；反之，只能位于赋值号右侧的表达式就是右值
-
-2) 有名称的、可以获取到存储地址的表达式即为左值；反之则是右值。
-
-```c++
-int && a = 10;
-a = 100;
-cout << a << endl;//100
-```
-
-
-
-## 右值引用
-
-一般来说，右值无法使用&取地址，c++11提供了&&来取得右值的引用(只能绑定右值)
-
-看下面的函数，
-
-```c++
-class Copyable {
-public:
-    Copyable(){}
-    Copyable(const Copyable &o) {
-        cout << "Copied" << endl;
-    }
-};
-Copyable ReturnRvalue() {
-    return Copyable(); //返回一个临时对象
-}
-void AcceptVal(Copyable a) {
-
-}
-void AcceptRef(const Copyable& a) {
-
-}
-
-int main() {
-    cout << "pass by value: " << endl;
-    AcceptVal(ReturnRvalue()); // 应该调用两次拷贝构造函数
-    cout << "pass by reference: " << endl;
-    AcceptRef(ReturnRvalue()); //应该只调用一次拷贝构造函数
-}
-```
-
-
-
-1. 左值引用， 使用 `T&`, 只能绑定**左值**-----------函数参数中，传入一个例如  void fuc(int & a)
-2. 右值引用， 使用 `T&&`， 只能绑定**右值**
-3. 常量左值， 使用 `const T&`, 既可以绑定**左值**又可以绑定**右值**<上面的代码示例了这一点>-----------函数参数中，传入一个例如  void fuc(const int & a)
-4. 已命名的**右值引用**，编译器会认为是个**左值**
-5. 编译器有返回值优化，但不要过于依赖
-6. 注意 ，不是所有&&都是右值引用，有时也有“通用引用(universal reference)”的含义，出现在类型推导的场景，详见下面的完美转发
-
-## 移动语义
-
-实现移动语义就必须增加两个函数：移动构造函数和移动赋值构造函数
-
-```c++
-class myclass{
-	public：
-	~~~
-	~~~
-     //移动构造函数
-MyString(MyString&& str) noexcept
-       :m_data(str.m_data) {
-       MCtor ++;
-       str.m_data = nullptr; //不再指向之前的资源了
-   }
-      //移动赋值函数
-MyString& operator=(MyString&& str) noexcept{
-       MAsgn ++;
-       if (this == &str) // 避免自我赋值!!
-          return *this;
-
-       delete[] m_data;
-       m_data = str.m_data;
-       str.m_data = nullptr; //不再指向之前的资源了
-       return *this;
-   }
-   private:
-   char* m_data;
-   
-   }
-```
-
-移动构造函数与拷贝构造函数的区别是，拷贝构造的参数是`const MyString& str`，是*常量左值引用*，而移动构造的参数是`MyString&& str`，是*右值引用*，而`MyString("hello")`是个临时对象，是个右值，优先进入**移动构造函数**而不是拷贝构造函数。而移动构造函数与拷贝构造不同，它并不是重新分配一块新的空间，将要拷贝的对象复制过来，而是"偷"了过来，将自己的指针指向别人的资源，然后将别人的指针修改为`nullptr`，这一步很重要，如果不将别人的指针修改为空，那么临时对象析构的时候就会释放掉这个资源，"偷"也白偷了。<delete一个空指针，编译器自动忽略，什么也不会发生，苏哦一不用判断是否为空>
-
-### move
-
-对于一个左值，编译器肯定是调用拷贝构造函数，能不能也移动构造而不是拷贝构造呢？`C++11`为了解决这个问题，提供了`std::move()`方法来将左值转换为右值，从而方便应用移动语义
-
-```c++
-for(int i=0;i<1000;i++){
-        MyString tmp("hello");
-        vecStr2.push_back(std::move(tmp)); //调用的是移动构造函数，需要MyString中实现了移动构造函数
-    }
-```
-
-1. 如果我们*没有提供移动构造函数，只提供了拷贝构造函数*，`std::move()`会失效但是不会发生错误，因为编译器找不到移动构造函数就去寻找拷贝构造函数，也这是拷贝构造函数的参数是`const T&`常量左值引用的原因！
-
-## 完美转发
-
-通过一个函数将参数继续转交给另一个函数进行处理，原参数可能是右值，可能是左值，如果还能继续保持参数的原有特征，那么它就是完美的
-
-下面是一个非完美转发的例子
-
-```c++
-void process(int& i){
-    cout << "process(int&):" << i << endl;
-}
-void process(int&& i){
-    cout << "process(int&&):" << i << endl;
-}
-
-void myforward(int&& i){
-    cout << "myforward(int&&):" << i << endl;
-    process(i);
-}
-
-int main()
-{
-    int a = 0;
-    process(a); //a被视为左值 process(int&):0
-    process(1); //1被视为右值 process(int&&):1
-    process(move(a)); //强制将a由左值改为右值 process(int&&):0
-    myforward(2);  //右值经过forward函数转交给process函数，却称为了一个左值，
-    //原因是该右值有了名字  所以是 process(int&):2
-    myforward(move(a));  // 同上，在转发的时候右值变成了左值  process(int&):0
-    // forward(a) // 错误用法，右值引用不接受左值
-}
-```
-
-而c++中提供了一个`std::forward()`模板函数解决这个问题。将上面的`myforward()`函数简单改写一下：
-
-```c++
-void myforward(int&& i){
-    cout << "myforward(int&&):" << i << endl;
-    process(std::forward<int>(i));
-}
-
-myforward(2); // process(int&&):2
-```
-
-上面修改过后还是不完美转发，`myforward()`函数能够将右值转发过去，但是并不能够转发左值，解决办法就是借助`universal references`通用引用类型和`std::forward()`模板函数共同实现完美转发。例子如下：
-
-```c++
-void RunCode(int &&m) {
-    cout << "rvalue ref" << endl;
-}
-void RunCode(int &m) {
-    cout << "lvalue ref" << endl;
-}
-void RunCode(const int &&m) {
-    cout << "const rvalue ref" << endl;
-}
-void RunCode(const int &m) {
-    cout << "const lvalue ref" << endl;
-}
-
-// 这里利用了universal references，如果写T&,就不支持传入右值，而写T&&，既能支持左值，又能支持右值
-//int b=1;这是模板的特性 
-//auto && a=b;  //int a&&=b会报错
-template<typename T>
-void perfectForward(T && t) {
-    RunCode(forward<T> (t));
-}
-
-template<typename T>
-void notPerfectForward(T && t) {
-    RunCode(t);
-}
-
-int main()
-{
-    int a = 0;
-    int b = 0;
-    const int c = 0;
-    const int d = 0;
-
-    notPerfectForward(a); // lvalue ref
-    notPerfectForward(move(b)); // lvalue ref
-    notPerfectForward(c); // const lvalue ref
-    notPerfectForward(move(d)); // const lvalue ref
-
-    cout << endl;
-    perfectForward(a); // lvalue ref
-    perfectForward(move(b)); // rvalue ref
-    perfectForward(c); // const lvalue ref
-    perfectForward(move(d)); // const rvalue ref
-}
 ```
 
 # C++11新特性
