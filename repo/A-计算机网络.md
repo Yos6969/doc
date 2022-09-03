@@ -47,7 +47,7 @@
 
 如果你细读[RFC793](https://link.zhihu.com/?target=https%3A//www.ietf.org/rfc/rfc793.txt)，也就是 TCP 的协议 RFC，你就会发现里面就讲到了为什么三次握手是必须的——TCP 需要 seq [序列号](https://www.zhihu.com/search?q=序列号&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"answer"%2C"sourceId"%3A573627478})来做可靠重传或接收。仅仅两次握手，回复一个ACK就可以建立连接,要是首次发起的syn报文在网络延迟，而服务端已经收到了重发的报文，这个延迟的报文再次到来，又会建立一个无用的连接
 
-##四次挥手
+## 四次挥手
 
 1. 想要拆除连接的一方A发送FIN报文，自身进入到FIN_WAIT_1状态；
 2. 被拆除连接的一方B接收到FIN报文，发ACK，自身进入到CLOSE_WAIT状态；
@@ -331,7 +331,15 @@ TCP拥塞控制认为网络丢包是由于网络拥塞造成的，有如下两�
     - 同时重传丢失的报文段。
 12. 在快速恢复状态下收到了新的ACK时：
     - cwnd = ssthresh
-    - dupACKCount = 0
+    - dupACKCount = 0s
+
+## send（） receive（）
+
+recv收多少从缓存区删多少
+
+send，内核发出去多少删多少
+
+![img](.\img\send.jpg)
 
 ## shuntdown()和close()
 
@@ -345,7 +353,7 @@ TCP拥塞控制认为网络丢包是由于网络拥塞造成的，有如下两�
 
 默认情况下，close()/closesocket() 会立即向网络中发送FIN包，不管输出缓冲区中是否还有数据，而shutdown() 会等输出缓冲区中的数据传输完毕再发送FIN包。也就意味着，close()/closesocket() 将丢失输出缓冲区中的数据，而调用 shutdown() 不会。
 
-##长连接和短连接
+## 长连接和短连接
 
 ```
 长连接，指在一个TCP连接上可以连续发送多个数据包，在TCP连接保持期间，如果没有数据包发送，需要双方发检测包以维持此连接，一般需要自己做在线维持（不发生RST包和四次挥手）。  
@@ -563,6 +571,8 @@ why？
 - session的数据量不会太大
 
 ## HTTPS基础概念
+
+https://zhuanlan.zhihu.com/p/458069442
 
 HTTP 有以下安全性问题：
 
@@ -861,10 +871,6 @@ main(int argc, char **argv)
 
 	exit(0);
 }
-
-```
-
-```c
 #include	"unp.h"
 
 void
@@ -886,6 +892,8 @@ str_cli(FILE *fp, int sockfd)
 }
 
 ```
+
+
 
 server.cpp
 

@@ -1,8 +1,6 @@
-[toc]
 
 
-
-[toc]
+[TOC]
 
 # 排序
 
@@ -43,7 +41,7 @@ void insert_sort(vector<int>&vec) {
 }
 ```
 
-##希尔排序
+## 希尔排序
 
 插入排序的修改版，根据步长由长到短分组，进行排序，直到步长为1为止，属于插入排序的一种。
 
@@ -65,11 +63,70 @@ void shell_sort(vector<int>&vec) {
 }
 ```
 
-##归并排序
+## 归并排序
 
 ![16](./img/16.jpg)
 
-##快排
+```c++
+#include "vector"
+#include "iostream"
+using namespace std;
+
+
+void Merge(vector<int>&nums, int left, int mid, int right, vector<int>& temp)
+{
+    int i = left;
+    int j = mid + 1;
+    int current = 0;
+    while (i <= mid && j <= right)
+    {
+        if (nums[i] <= nums[j])
+            temp[current++] = nums[i++];
+        else
+            temp[current++] = nums[j++];
+    }
+    while (i <= mid)
+        temp[current++] = nums[i++];
+    while (j <= right)
+        temp[current++] = nums[j++];
+    current = 0;
+    while (left <= right)
+    {
+        nums[left++] = temp[current++];
+    }
+
+}
+
+void MergesortCore(vector<int>&nums, int left, int right, vector<int>& temp)
+{
+    if (left < right)
+    {
+        int mid = (left+right) >> 1;
+        MergesortCore(nums, left, mid, temp);
+        MergesortCore(nums, mid + 1, right, temp);
+        Merge(nums, left, mid, right, temp);
+    }
+}
+
+void Mergesort(vector<int>& nums)
+{
+    vector<int>temp(nums.size());
+    MergesortCore(nums, 0, nums.size()-1, temp);
+}
+
+int main()
+{
+    vector<int> nums = {2,3,51,1,3,2,7,4,5,131};
+    Mergesort(nums);
+    for (auto i : nums)
+        cout<<i<<" ";
+
+}
+```
+
+
+
+## 快排
 
 非稳定排序
 
@@ -512,5 +569,60 @@ public:
 private:
     vector<size_t> _v;
 }; 
+```
+
+# string
+
+```c++
+class String
+{
+public:
+     String(const char *str = NULL);// 普通构造函数
+     String(const String &other);    // 拷贝构造函数
+     ~ String(void);    // 析构函数
+     String & operate =(const String &other);// 赋值函数
+private:
+     char *m_data;// 用于保存字符串
+}; 
+
+//普通构造函数
+String::String(const char *str)
+{
+        if(str==NULL)
+        {
+                m_data = new char[1]; 
+                *m_data = '\0';
+        }    
+        else
+        {
+         int length = strlen(str);
+         m_data = new char[length+1]; 
+         strcpy(m_data, str);
+        }
+} 
+// String的析构函数
+String::~String(void)
+{
+        delete [] m_data; // 或delete m_data;
+}
+//拷贝构造函数
+String::String(const String &other) 　　　// 输入参数为const型
+{     
+        int length = strlen(other.m_data);
+        m_data = new char[length+1]; 　　　　
+        strcpy(m_data, other.m_data);    
+} 
+//赋值函数
+String & String::operate =(const String &other) // 输入参数为const型
+{     
+        if(this == &other)                  　　//检查自赋值
+                return *this;   
+        delete [] m_data;            　　　　//释放原有的内存资源
+        int length = strlen( other.m_data );      
+        m_data = new char[length+1]; 　
+        strcpy( m_data, other.m_data );   
+        return *this;     　　　　　　　　//返回本对象的引用  
+
+}
 ```
 

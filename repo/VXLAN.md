@@ -14,8 +14,7 @@ vBDif:基于BD创建的三层逻辑接口。通过VBDIF接口配置IP地址可�
 
 NVE：设备运行了vxlan就是NVE
 
-
-##引入
+## 引入
 
 https://www.bilibili.com/video/BV1oK4y1L795/
 
@@ -34,7 +33,7 @@ https://www.bilibili.com/video/BV1oK4y1L795/
 
 <img src="./img/image-20220510111213837.png" alt="image-20220510111213837" style="zoom:75%;" />
 
-##二层转发
+## 二层转发
 
 ![image-20220510111716890](./img/image-20220510111716890.png)
 

@@ -36,3 +36,4 @@ https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.1
 
 接着我们需要定义一份BasicUsage.proto的描述文件，其结构和我们定义普通的类十分类似。**特别需要注意的是，字段后跟着的=号不代表字段的值，而是字段的序号**，后面会详细解释
 
+ 

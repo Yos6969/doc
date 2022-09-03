@@ -146,7 +146,149 @@ int main(){
 //A->print()
 ```
 
+## 虚基类
 
+作者：自由技艺
+链接：https://zhuanlan.zhihu.com/p/365223471
+来源：知乎
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
+**1 菱形继承**
+
+菱形继承的基本概念相信大家都很清楚了，如下面代码所示，Father 类和 Mother 类分别从 GrandParent 继承而来，GrandSon 从 Father 类和 Mother 类多继承而来，从而形成菱形结构。
+
+```cpp
+#include <iostream>
+
+class GrandParent {
+public:
+    std::string m_00;
+    GrandParent()
+    {
+        m_00 = "grandParent";
+        std::cout << "GrandParent constructed !" << std::endl;
+    }
+};
+
+class Father : public GrandParent {
+public:
+    std::string m_11;
+    Father()
+    {
+        m_11 = "Father";
+        std::cout << "Father constructed !" << std::endl;
+    }
+};
+
+class Mother : public GrandParent {
+public:
+    std::string m_22;
+    Mother()
+    {
+        m_22 = "Mother";
+        std::cout << "Mother constructed !" << std::endl;
+    }
+};
+
+class GrandSon : public Father, public Mother {
+public:
+    std::string m_33;
+    GrandSon()
+    {
+        m_33 = "GrandSon";
+        std::cout << "GrandSon constructed !" << std::endl;
+    }
+};
+
+int main()
+{
+    GrandSon grandSon;
+    std::cout << grandSon.Mother::m_00 << std::endl;
+    std::cout << grandSon.Father::m_00 << std::endl;
+    std::cin.get();
+}
+```
+
+![img](./img/v2-b9e1653f38586c4f530bb6dd27d132e0_720w.jpg)
+
+ 
+
+我们发现：类 GrandSon 中存在两份基类 GrandParent 的数据，分别存在于类 Father 和类 Mother 中，如果数据多则严重浪费空间，也不利于维护。同时，如果要访问基类 GrandParent 中的数据还需要通过域运算符（::）进行区分。
+
+**2 虚继承**
+
+为了解决上述菱形继承带来的问题，C++中引入了**虚基类**，其作用是在间接继承共同基类时只保留一份基类成员。**虚基类并不是在声明基类时声明的，而是在声明派生类时，指定继承方式（virtual）声明的，**下面代码中 GrandParent 就一个虚基类。
+
+```cpp
+#include <iostream>
+
+class GrandParent {
+public:
+    std::string m_00;
+    GrandParent()
+    {
+        m_00 = "grandParent";
+        std::cout << "GrandParent constructed !" << std::endl;
+    }
+};
+
+class Father : virtual public GrandParent {
+public:
+    std::string m_11;
+    Father()
+    {
+        m_11 = "Father";
+        std::cout << "Father constructed !" << std::endl;
+    }
+};
+
+class Mother : virtual public GrandParent {
+public:
+    std::string m_22;
+    Mother()
+    {
+        m_22 = "Mother";
+        std::cout << "Mother constructed !" << std::endl;
+    }
+};
+
+class GrandSon : public Father, public Mother {
+public:
+    std::string m_33;
+    GrandSon()
+    {
+        m_33 = "GrandSon";
+        std::cout << "GrandSon constructed !" << std::endl;
+    }
+};
+
+int main()
+{
+    GrandSon grandSon;
+    std::cout << grandSon.Mother::m_00 << std::endl;
+    std::cout << grandSon.Father::m_00 << std::endl;
+    std::cout << grandSon.m_00 << std::endl;
+    std::cin.get();
+}
+```
+
+![img](./img/v2-a343172e931faa1c91af804e6b2f266e_720w.jpg)
+
+从程序运行的结果可以看出：
+
+1. 定义 GrandSon 对象时，基类 GrandParent 的构造函数只调用了一次；
+2. 直接通过 grandSon 就可以访问 GranParent 中的成员 m_00，而不再需要域运算符。
+
+另外，还有两条重要结论，这里就不一一验证了：
+
+1. 对于虚基类的初始化是由最后的派生类中负责初始化。在最后的派生类中不仅要对直接基类进行初始化，还要负责对虚基类初始化；
+2. 程序运行时，只有最后的派生类执行对基类的构造函数调用，而忽略其他派生类对虚基类的构造函数调用。从而避免对基类数据成员重复初始化。因此，虚基类只会构造一次。
+
+最后，引用网上的一张图作为文章的结尾吧，图中关于继承的所有知识点在我们之前的 C++ 系列专题文章中基本都讲过了～
+
+
+
+![img](./img/v2-05d57b69ca1c15e15cb6465c6891870d_b.jpg)![img](https://pic2.zhimg.com/80/v2-05d57b69ca1c15e15cb6465c6891870d_720w.jpg)C++ 继承的知识体系
 
 # 函数
 
@@ -1586,6 +1728,39 @@ std::cout << v << std::endl;
     return 0;
   }
 ```
+### std::lock_guard
+
+RAII的思想， 出域自动析构，但是没有unique_lockl灵活，类似go语言的defer
+
+```
+template <class _Mutex>
+class lock_guard { // class with destructor that unlocks a mutex
+public:
+    using mutex_type = _Mutex;
+	//无adopt_lock参数，构造时加锁
+    explicit lock_guard(_Mutex& _Mtx) : _MyMutex(_Mtx) { // construct and lock
+        _MyMutex.lock();
+    }
+	//有adopt_lock参数，构造时不加锁
+    lock_guard(_Mutex& _Mtx, adopt_lock_t) : _MyMutex(_Mtx) {} // construct but don't lock
+	//析构解锁
+    ~lock_guard() noexcept {
+        _MyMutex.unlock();
+    }
+	//屏蔽拷贝构造
+    lock_guard(const lock_guard&) = delete; 
+    lock_guard& operator=(const lock_guard&) = delete; 
+
+private:
+    _Mutex& _MyMutex;
+};
+————————————————
+版权声明：本文为CSDN博主「水墨长天」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/gehong3641/article/details/124028976s
+```
+
+
+
 ## std::condition_variable
 
 当std::condition_variable对象的某个wait函数被调用的时候，它使用std::unique_lock(通过std::mutex) 来锁住当前线程。当前线程会一直被阻塞，直到另外一个线程在相同的std::condition_variable对象上调用了notification函数来唤醒当前线程。
@@ -1776,7 +1951,8 @@ void consumer () {
 void producer () {
     while (true) {
         std::unique_lock<std::mutex> lck(mtx);
-        while (cargo != 0) cv1.wait(lck);
+        while (cargo != 0) 
+            cv1.wait(lck);
         cargo = 1;
         std::cout << "produced" << std::endl;
         cv.notify_one();
@@ -1939,6 +2115,12 @@ decltype(auto)：decltype是C++11新增的关键字，主要用于提取变量�
 # C++20协程
 
 https://www.cnblogs.com/ishen/p/14617708.html
+
+
+
+协程分为有栈协程和无栈协程
+
+go routine是有栈协程
 
 ## 协程与线程
 

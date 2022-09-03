@@ -316,7 +316,7 @@ DPDK环境支持两种模式的数据包处理，RTC和pipeline：
 
 为了避免任何不必要的中断处理开销，执行环境不得使用任何异步通知机制。即便有需要，也应该尽量使用ring来引入通知信息。
 
-在多核环境中避免锁竞争是一个关键问题。 为了解决这个问题，PMD旨在尽可能地使用每个core的私有资源。 例如，PMD每个端口维护每个core单独的传输队列。 同样的，端口的每个接收队列都被分配给单个逻辑核并由其轮询。
+x # import dpdk libraryfind_package(PkgConfig REQUIRED)pkg_search_module(LIBDPDK REQUIRED libdpdk)​# import threadfind_package(Threads REQUIRED)​link_directories(${LIBDPDK_LIBRARY_DIRS})include_directories(${LIBDPDK_INCLUDE_DIRS})​target_link_libraries(smart_offload ${LIBDPDK_LIBRARIES} Threads::Threads)bash
 
 # EAL环境层
 
