@@ -34,22 +34,38 @@ class singleton{
 public:
     static  singleton& getinstance()
     {
-//static singleton instance; 放这也行
+        static singleton instance; 放这也行
         return instance;
     }
 
 private:
-    static singleton instance;
     singleton(){}
 };
 
-singleton singleton::instance; //需要在类外实例化
 int main()
 {
     singleton s1 = singleton::getinstance();
     singleton s2 = singleton::getinstance();
     cout<<&s1<<endl<<&s2<<endl;
 }
+```
+
+## 推荐的饿汉式单例
+```cpp
+class Singleton
+{
+private:
+	static Singleton instance;
+private:
+	Singleton();
+	~Singleton();
+	Singleton(const Singleton&);
+	Singleton& operator=(const Singleton&);
+public:
+	static Singleton& getInstance() {
+		return instance;
+	}
+};
 ```
 
 - 在内存中只有一个对象，节省内存空间。

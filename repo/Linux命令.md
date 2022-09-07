@@ -79,11 +79,13 @@ service xrdp start
 查看端口信息
 	netstat
 查看大小端和cpu参数
-	lscpu	
-	
-	ldconfig -p 查看
+	lscpu
+查看当前缓存中存在的动态链接库
+	ldconfig -p 
 查看磁盘信息
 	df -h
+查看网络流量
+	iftop
 ```
 
 # 
