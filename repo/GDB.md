@@ -87,7 +87,7 @@ gdb [exec file] [core file]
 
 # 借助工具查看内存泄漏
 
-##sanitize addresser
+## address sanitizer
 
 环境：Ubuntu 16.04  gcc 4.8以上
 用-fsanitize=address选项编译和链接你的程序;
@@ -104,11 +104,16 @@ gdb [exec file] [core file]
 
 ![img](./img/leakall.png)
 
-## valgrind
+## valgrind memcheck
 
-```
-valgrind a.out
+```bash
+valgrind --tool=memcheck --leak-check=full a.out
 #不需要重新编译，直接可以运行，比sanaddress慢得多
 ```
 
 ![image-20220429170515676](./img/image-20220429170515676.png)
+
+## 两者区别
+asan是替换了系统的`malloc`, 并在分配内存的时候填充了类此`0xcc`之类的pattern, 可以使得程序运行的时候进行内存问题分析.
+valgrind中的memcheck是使用了一个模拟CPU, 所以要比asan效率低一些, 但是可以发现直接/间接的内存泄漏.
+其调试应使用其自带的vgdb配合gdb remote调试.
